@@ -1,4 +1,4 @@
-# Prometheus Monitoring Mixin for nginx-mixin
+# Prometheus Monitoring Mixin for Ingress-nginx
 
 A set of Grafana dashboards and Prometheus alerts and rules for ingress-nginx.
 

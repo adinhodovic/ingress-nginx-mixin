@@ -376,9 +376,9 @@ local statPanel = grafana.statPanel;
       .addPanel(ingressRow, gridPos={ h: 1, w: 24, x: 0, y: 5 })
       .addPanel(ingressRequestVolumeGraphPanel, gridPos={ h: 8, w: 12, x: 0, y: 6 })
       .addPanel(ingressSuccessRateGraphPanel, gridPos={ h: 8, w: 12, x: 12, y: 6 })
-      .addPanel(ingressResponseTable, gridPos={ h: 10, w: 24, x: 0, y: 14 })
-      .addPanel(certificateRow, gridPos={ h: 1, w: 24, x: 0, y: 24 })
-      .addPanel(certificateTable, gridPos={ h: 10, w: 24, x: 0, y: 25 })
+      .addPanel(ingressResponseTable, gridPos={ h: 8, w: 24, x: 0, y: 14 })
+      .addPanel(certificateRow, gridPos={ h: 1, w: 24, x: 0, y: 22 })
+      .addPanel(certificateTable, gridPos={ h: 8, w: 24, x: 0, y: 23 })
       + { templating+: { list+: templates } },
   },
 }

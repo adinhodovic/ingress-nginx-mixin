@@ -7,7 +7,7 @@
           {
             alert: 'NginxHighHttp4xxErrorRate',
             expr: |||
-              (sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, status=~"^4.*", ingress!~"%(ignoredIngresses)s"}[5m]))  by (exported_namespace, ingress) / sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, , ingress!~"%(ignoredIngresses)s"}[5m]))  by (exported_namespace, ingress) * 100) > 5
+              (sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, status=~"^4.*", ingress!~"%(ignoredIngresses)s"}[5m]))  by (exported_namespace, ingress) / sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, ingress!~"%(ignoredIngresses)s"}[5m]))  by (exported_namespace, ingress) * 100) > 5
             ||| % $._config,
             'for': '30s',
             labels: {
@@ -22,7 +22,7 @@
           {
             alert: 'NginxHighHttp5xxErrorRate',
             expr: |||
-              (sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, status=~"^5.*", ingress!~"%(ignoredIngresses)s"}[5m]))  by (exported_namespace, ingress) / sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, , ingress!~"%(ignoredIngresses)s"}[5m]))  by (exported_namespace, ingress) * 100) > 5
+              (sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, status=~"^5.*", ingress!~"%(ignoredIngresses)s"}[5m]))  by (exported_namespace, ingress) / sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, ingress!~"%(ignoredIngresses)s"}[5m]))  by (exported_namespace, ingress) * 100) > 5
             ||| % $._config,
             annotations: {
               summary: 'Nginx high HTTP 5xx error rate.',

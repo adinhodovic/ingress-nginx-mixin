@@ -356,12 +356,12 @@ local statPanel = grafana.statPanel;
       )
       .addTarget(prometheus.target(certificateExpiryQuery, format='table', instant=true)),
 
-    'ingress-nginx.json':
+    'ingress-nginx-overview.json':
       // Core dashboard
       dashboard.new(
         'Ingress Nginx / Overview',
-        description='A dashboard that monitors Ingress-nginx. It is created using the (Ingress-Nginx-mixin)[]',
-        uid='ingress-nginx-mixin',
+        description='A dashboard that monitors Ingress-nginx. It is created using the (Ingress-Nginx-mixin)[https://github.com/adinhodovic/ingress-nginx-mixin]',
+        uid=$._config.overviewDashboardUid,
         time_from='now-1h',
         time_to='now',
         editable='true',

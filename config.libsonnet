@@ -5,7 +5,9 @@
     grafanaUrl: 'https://grafana.com',
     overviewDashboardUid: '4x6xvSN7z',
     ignoredIngresses: '',
-    interval: '5m',
-    threshold: '5',  // percent
+    ingressNginx4xxInterval: '5m',
+    ingressNginx4xxThreshold: '5',  // percent
+    ingressNginx5xxInterval: '5m',
+    ingressNginx5xxThreshold: '5',  // percent
   },
 }

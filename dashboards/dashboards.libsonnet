@@ -362,6 +362,7 @@ local statPanel = grafana.statPanel;
         'Ingress Nginx / Overview',
         description='A dashboard that monitors Ingress-nginx. It is created using the (Ingress-Nginx-mixin)[https://github.com/adinhodovic/ingress-nginx-mixin]',
         uid=$._config.overviewDashboardUid,
+        tags=$._config.tags,
         time_from='now-1h',
         time_to='now',
         editable='true',

@@ -134,11 +134,20 @@ local statPanel = grafana.statPanel;
 
 
     local controllerSuccessRateQuery = |||
-      sum(rate(nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",namespace=~"$namespace",status!~"[4-5].*"}[2m])) / sum(rate(nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",namespace=~"$namespace"}[2m]))
+      sum(
+        rate(
+          nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",namespace=~"$namespace", exported_namespace=~"$exported_namespace",status!~"[5].*"}[2m]
+          )
+      ) /
+      sum(
+        rate(
+          nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",exported_namespace=~"$exported_namespace",namespace=~"$namespace"}[2m]
+        )
+      )
     ||| % $._config,
     local controllerSuccessRateStatPanel =
       statPanel.new(
-        'Controller Success Rate (non-4|5xx responses)',
+        'Controller Success Rate (non-5xx responses)',
         datasource='$datasource',
         unit='percentunit',
         reducerFunction='lastNotNull',
@@ -187,7 +196,13 @@ local statPanel = grafana.statPanel;
       ),
 
     local ingressRequestQuery = |||
-      round(sum(irate(nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",controller_namespace=~"$namespace",ingress=~"$ingress", exported_namespace=~"$exported_namespace"}[2m])) by (ingress), 0.001)
+      round(
+        sum(
+          irate(
+            nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",controller_namespace=~"$namespace",ingress=~"$ingress", exported_namespace=~"$exported_namespace"}[2m]
+          )
+        ) by (ingress, exported_namespace), 0.001
+      )
     ||| % $._config,
     local ingressRequestVolumeGraphPanel =
       graphPanel.new(
@@ -205,12 +220,21 @@ local statPanel = grafana.statPanel;
       .addTarget(
         prometheus.target(
           ingressRequestQuery,
-          legendFormat='{{ ingress }}',
+          legendFormat='{{ ingress }}/{{ exported_namespace }}',
         )
       ),
 
     local ingressSuccessRateQuery = |||
-      sum(rate(nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",namespace=~"$namespace",ingress=~"$ingress",exported_namespace=~"$exported_namespace", status!~"[5].*"}[2m])) by (ingress) / sum(rate(nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",namespace=~"$namespace",ingress=~"$ingress", exported_namespace=~"$exported_namespace"}[2m])) by (ingress)
+      sum(
+        rate(
+          nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",namespace=~"$namespace",ingress=~"$ingress",exported_namespace=~"$exported_namespace", status!~"[5].*"}[2m]
+        )
+      ) by (ingress, exported_namespace) /
+      sum(
+        rate(
+          nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",namespace=~"$namespace",ingress=~"$ingress", exported_namespace=~"$exported_namespace"}[2m]
+        )
+      ) by (ingress, exported_namespace)
     ||| % $._config,
     local ingressSuccessRateGraphPanel =
       graphPanel.new(
@@ -230,21 +254,31 @@ local statPanel = grafana.statPanel;
       .addTarget(
         prometheus.target(
           ingressSuccessRateQuery,
-          legendFormat='{{ ingress }}',
+          legendFormat='{{ ingress }}/{{ exported_namespace }}',
         )
       ),
 
     // Table
     // Percentile queries
     local ingress50thPercentileResponseQuery = |||
-      histogram_quantile(0.50, sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{ingress!="",controller_pod=~"$controller",controller_class=~"$controller_class",controller_namespace=~"$namespace", exported_namespace=~"$exported_namespace", ingress=~"$ingress"}[2m])) by (le, ingress))
+      histogram_quantile(
+        0.50, sum(
+          rate(
+            nginx_ingress_controller_request_duration_seconds_bucket{ingress!="",controller_pod=~"$controller",controller_class=~"$controller_class",controller_namespace=~"$namespace", exported_namespace=~"$exported_namespace", ingress=~"$ingress"}[2m]
+          )
+        ) by (le, ingress, exported_namespace)
+      )
     ||| % $._config,
     local ingress90thPercentileResponseQuery = std.strReplace(ingress50thPercentileResponseQuery, '0.50', '0.90'),
     local ingress99thPercentileResponseQuery = std.strReplace(ingress50thPercentileResponseQuery, '0.50', '0.99'),
 
     // Request size queries
     local ingressRequestSizeQuery = |||
-      sum(irate(nginx_ingress_controller_request_size_sum{ingress!="",controller_pod=~"$controller",controller_class=~"$controller_class",controller_namespace=~"$namespace",ingress=~"$ingress"}[2m])) by (ingress)
+      sum(
+        irate(
+          nginx_ingress_controller_request_size_sum{ingress!="",controller_pod=~"$controller",controller_class=~"$controller_class",controller_namespace=~"$namespace",exported_namespace=~"$exported_namespace",ingress=~"$ingress"}[2m]
+        )
+      ) by (ingress, exported_namespace)
     |||,
     local ingressResponseSizeQuery = std.strReplace(ingressRequestSizeQuery, 'request', 'response'),
 
@@ -266,6 +300,10 @@ local statPanel = grafana.statPanel;
           {
             alias: 'Ingress',
             pattern: 'ingress',
+          },
+          {
+            alias: 'Namespace',
+            pattern: 'exported_namespace',
           },
           {
             alias: 'P50 Latency',
@@ -446,19 +484,19 @@ local statPanel = grafana.statPanel;
       .addTarget(
         prometheus.target(
           ingressRequestHandlingTimeQuery,
-          legendFormat='.5 - {{ ingress }} - {{ exported_namespace }}',
+          legendFormat='.5 - {{ ingress }}/{{ exported_namespace }}',
         )
       )
       .addTarget(
         prometheus.target(
           std.strReplace(ingressRequestHandlingTimeQuery, '0.5', '0.95'),
-          legendFormat='.95 - {{ ingress }} - {{ exported_namespace }}',
+          legendFormat='.95 - {{ ingress }}/{{ exported_namespace }}',
         )
       )
       .addTarget(
         prometheus.target(
           std.strReplace(ingressRequestHandlingTimeQuery, '0.5', '0.99'),
-          legendFormat='.99 - {{ ingress }} - {{ exported_namespace }}',
+          legendFormat='.99 - {{ ingress }}/{{ exported_namespace }}',
         )
       ),
 
@@ -492,19 +530,19 @@ local statPanel = grafana.statPanel;
       .addTarget(
         prometheus.target(
           ingressUpstreamResponseTimeQuery,
-          legendFormat='.5 - {{ ingress }} - {{ exported_namespace }}',
+          legendFormat='.5 - {{ ingress }}/{{ exported_namespace }}',
         )
       )
       .addTarget(
         prometheus.target(
           std.strReplace(ingressUpstreamResponseTimeQuery, '0.5', '0.95'),
-          legendFormat='.95 - {{ ingress }} - {{ exported_namespace }}',
+          legendFormat='.95 - {{ ingress }}/{{ exported_namespace }}',
         )
       )
       .addTarget(
         prometheus.target(
           std.strReplace(ingressUpstreamResponseTimeQuery, '0.5', '0.99'),
-          legendFormat='.99 - {{ ingress }} - {{ exported_namespace }}',
+          legendFormat='.99 - {{ ingress }}/{{ exported_namespace }}',
         )
       ),
 
@@ -540,7 +578,7 @@ local statPanel = grafana.statPanel;
       .addTarget(
         prometheus.target(
           ingressRequestVolumeQuery,
-          legendFormat='{{ path }} - {{ ingress }} - {{ exported_namespace }}',
+          legendFormat='{{ path }} - {{ ingress }}/{{ exported_namespace }}',
         )
       ),
 
@@ -574,7 +612,7 @@ local statPanel = grafana.statPanel;
       .addTarget(
         prometheus.target(
           ingressUpstreamMedianResponseTimeQuery,
-          legendFormat='{{ path }} - {{ ingress }} - {{ exported_namespace }}',
+          legendFormat='{{ path }} - {{ ingress }}/{{ exported_namespace }}',
         )
       ),
 
@@ -605,7 +643,7 @@ local statPanel = grafana.statPanel;
       .addTarget(
         prometheus.target(
           ingressResponseErrorRateQuery,
-          legendFormat='{{ path }} - {{ ingress }} - {{ exported_namespace }}',
+          legendFormat='{{ path }} - {{ ingress }}/{{ exported_namespace }}',
         )
       ),
 
@@ -631,7 +669,7 @@ local statPanel = grafana.statPanel;
       .addTarget(
         prometheus.target(
           ingressUpstreamTimeConsumedQuery,
-          legendFormat='{{ path }} - {{ ingress }} - {{ exported_namespace }}',
+          legendFormat='{{ path }} - {{ ingress }}/{{ exported_namespace }}',
         )
       ),
 
@@ -663,7 +701,7 @@ local statPanel = grafana.statPanel;
       .addTarget(
         prometheus.target(
           ingressErrorVolumeByPathQuery,
-          legendFormat='{{ status }} {{ path }} - {{ ingress }} - {{ exported_namespace }}',
+          legendFormat='{{ status }} {{ path }} - {{ ingress }}/{{ exported_namespace }}',
         )
       ),
 
@@ -701,7 +739,7 @@ local statPanel = grafana.statPanel;
       .addTarget(
         prometheus.target(
           ingressResponseSizeByPathQuery,
-          legendFormat='{{ path }} - {{ ingress }} - {{ exported_namespace }}',
+          legendFormat='{{ path }} - {{ ingress }}/{{ exported_namespace }}',
         )
       ),
 

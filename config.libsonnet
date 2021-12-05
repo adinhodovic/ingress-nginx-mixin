@@ -3,8 +3,8 @@
     // Selectors are inserted between {} in Prometheus queries.
     ingressNginxSelector: 'job="ingress-nginx-controller-metrics"',
     grafanaUrl: 'https://grafana.com',
-    overviewDashboardUid: 'ingress-nginx-overview-dashboard',
-    requestHandlingPerformanceDashboardUid: 'ingress-nginx-request-handling-performance',
+    overviewDashboardUid: 'ingress-nginx-overview-12mk4klgjweg',
+    requestHandlingPerformanceDashboardUid: 'ingress-nginx-request-jqkwfdqwd',
     tags: ['nginx', 'ingress-nginx'],
     ignoredIngresses: '',
     ingressNginx4xxInterval: '5m',

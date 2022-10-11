@@ -15,8 +15,8 @@
             },
             annotations: {
               summary: 'Nginx high HTTP 4xx error rate.',
-              description: 'More than %(ingressNginx4xxThreshold)s%% HTTP requests with status 4xx for {{ $labels.ingress }}/{{ $labels.exported_namespace }} the past %(ingressNginx4xxInterval)s.' % $._config,
-              dashboard_url: '%(grafanaUrl)s/d/%(overviewDashboardUid)s/nginx-ingress-controller?orgId=1&refresh=5s' % $._config,
+              description: 'More than %(ingressNginx4xxThreshold)s%% HTTP requests with status 4xx for {{ $labels.exported_namespace }}/{{ $labels.ingress }} the past %(ingressNginx4xxInterval)s.' % $._config,
+              dashboard_url: $._config.dashboardUrl,
             },
           },
           {
@@ -26,8 +26,8 @@
             ||| % $._config,
             annotations: {
               summary: 'Nginx high HTTP 5xx error rate.',
-              description: 'More than %(ingressNginx5xxThreshold)s%% HTTP requests with status 5xx for {{ $labels.ingress }}/{{ $labels.exported_namespace }} the past %(ingressNginx5xxInterval)s.' % $._config,
-              dashboard_url: '%(grafanaUrl)s/d/%(overviewDashboardUid)s/nginx-ingress-controller?orgId=1&refresh=5s' % $._config,
+              description: 'More than %(ingressNginx5xxThreshold)s%% HTTP requests with status 5xx for {{ $labels.exported_namespace }}/{{ $labels.ingress }} the past %(ingressNginx5xxInterval)s.' % $._config,
+              dashboard_url: $._config.dashboardUrl,
             },
             'for': '30s',
             labels: {

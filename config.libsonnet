@@ -4,6 +4,8 @@
     ingressNginxSelector: 'job="ingress-nginx-controller-metrics"',
     grafanaUrl: 'https://grafana.com',
     overviewDashboardUid: 'ingress-nginx-overview-12mk4klgjweg',
+    dashboardLabelQueryParams: 'var-exported_namespace={{ $labels.exported_namespace }}&var-ingress={{ $labels.ingress }}',
+    dashboardUrl: '%s/d/%s/nginx-ingress-controller?%s' % [self.grafanaUrl, self.overviewDashboardUid, self.dashboardLabelQueryParams],
     requestHandlingPerformanceDashboardUid: 'ingress-nginx-request-jqkwfdqwd',
     tags: ['nginx', 'ingress-nginx'],
     ignoredIngresses: '',

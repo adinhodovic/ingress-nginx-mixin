@@ -463,6 +463,7 @@ local statPanel = grafana.statPanel;
         includeAll=true,
         sort=1
       ),
+      errorCodesTemplate,
     ],
 
     local ingressResponseTimeRow =
@@ -759,7 +760,7 @@ local statPanel = grafana.statPanel;
         )
       ),
 
-    'request-handling-performance.json':
+    'ingress-nginx-request-handling-performance.json':
       // Core dashboard
       dashboard.new(
         'Ingress Nginx / Request Handling Performance',

@@ -87,6 +87,21 @@ local statPanel = grafana.statPanel;
         sort=1
       ),
 
+    local errorCodesTemplate =
+      template.custom(
+        name='error_codes',
+        label='Error Codes',
+        query='4,5',
+        allValues='4-5',
+        current='5',
+        hide='',
+        refresh=1,
+        multi=false,
+        includeAll=true,
+      ) + {
+        description: '4 represents all 4xx codes, 5 represents all 5xx codes',
+      },
+
     local overviewDashboardTemplates = [
       prometheusTemplate,
       namespaceTemplate,
@@ -94,6 +109,7 @@ local statPanel = grafana.statPanel;
       controllerTemplate,
       ingressExportedNamespaceTemplate,
       ingressTemplate,
+      errorCodesTemplate,
     ],
 
     local controllerRow =
@@ -136,7 +152,7 @@ local statPanel = grafana.statPanel;
     local controllerSuccessRateQuery = |||
       sum(
         rate(
-          nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",namespace=~"$namespace", exported_namespace=~"$exported_namespace",status!~"[5].*"}[2m]
+          nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",namespace=~"$namespace", exported_namespace=~"$exported_namespace",status!~"[$error_codes].*"}[2m]
           )
       ) /
       sum(
@@ -147,7 +163,7 @@ local statPanel = grafana.statPanel;
     ||| % $._config,
     local controllerSuccessRateStatPanel =
       statPanel.new(
-        'Controller Success Rate (non-5xx responses)',
+        'Controller Success Rate (non $error_codes-xx responses)',
         datasource='$datasource',
         unit='percentunit',
         reducerFunction='lastNotNull',
@@ -227,7 +243,7 @@ local statPanel = grafana.statPanel;
     local ingressSuccessRateQuery = |||
       sum(
         rate(
-          nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",namespace=~"$namespace",ingress=~"$ingress",exported_namespace=~"$exported_namespace", status!~"[5].*"}[2m]
+          nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",namespace=~"$namespace",ingress=~"$ingress",exported_namespace=~"$exported_namespace", status!~"[$error_codes].*"}[2m]
         )
       ) by (ingress, exported_namespace) /
       sum(
@@ -238,7 +254,7 @@ local statPanel = grafana.statPanel;
     ||| % $._config,
     local ingressSuccessRateGraphPanel =
       graphPanel.new(
-        'Ingress Success Rate (non-5xx responses)',
+        'Ingress Success Rate (non $error_codes-xx responses)',
         datasource='$datasource',
         format='percentunit',
         fill='0',
@@ -447,6 +463,7 @@ local statPanel = grafana.statPanel;
         includeAll=true,
         sort=1
       ),
+      errorCodesTemplate,
     ],
 
     local ingressResponseTimeRow =
@@ -620,7 +637,7 @@ local statPanel = grafana.statPanel;
       sum by (path, ingress, exported_namespace) (rate(nginx_ingress_controller_request_duration_seconds_count{
         ingress =~ "$ingress",
         exported_namespace =~ "$exported_namespace",
-        status =~ "[4-5].*"
+        status =~ "[$error_codes].*"
       }[1m])) / sum by (path, ingress, exported_namespace) (rate(nginx_ingress_controller_request_duration_seconds_count{
         ingress =~ "$ingress",
         exported_namespace =~ "$exported_namespace"
@@ -679,7 +696,7 @@ local statPanel = grafana.statPanel;
           nginx_ingress_controller_request_duration_seconds_count{
             ingress =~ "$ingress",
             exported_namespace =~ "$exported_namespace",
-            status =~"[4-5].*",
+            status =~"[$error_codes].*",
           }[1m]
         )
       ) by(path, ingress, exported_namespace, status)
@@ -743,7 +760,7 @@ local statPanel = grafana.statPanel;
         )
       ),
 
-    'request-handling-performance.json':
+    'ingress-nginx-request-handling-performance.json':
       // Core dashboard
       dashboard.new(
         'Ingress Nginx / Request Handling Performance',

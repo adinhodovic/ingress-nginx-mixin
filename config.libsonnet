@@ -9,8 +9,10 @@
     requestHandlingPerformanceDashboardUid: 'ingress-nginx-request-jqkwfdqwd',
     tags: ['nginx', 'ingress-nginx'],
     ignoredIngresses: '',
+    ingressNginx4xxSeverity: 'info',
     ingressNginx4xxInterval: '5m',
     ingressNginx4xxThreshold: '5',  // percent
+    ingressNginx5xxSeverity: 'warning',
     ingressNginx5xxInterval: '5m',
     ingressNginx5xxThreshold: '5',  // percent
   },

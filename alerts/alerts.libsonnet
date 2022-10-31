@@ -11,7 +11,7 @@
             ||| % $._config,
             'for': '30s',
             labels: {
-              severity: 'info',
+              severity: $._config.ingressNginx4xxSeverity,
             },
             annotations: {
               summary: 'Nginx high HTTP 4xx error rate.',
@@ -31,7 +31,7 @@
             },
             'for': '30s',
             labels: {
-              severity: 'warning',
+              severity: $._config.ingressNginx5xxSeverity,
             },
           },
         ],

@@ -465,7 +465,7 @@
          "steppedLine": false,
          "targets": [
             {
-               "expr": "sum by (path, ingress, exported_namespace) (\n  rate(\n    nginx_ingress_controller_request_duration_seconds_count{\n      ingress=~\"$ingress\",\n      exported_namespace=~\"$exported_namespace\",\n      status=~\"500\"\n    }[$__rate_interval]\n  )\n)\n/\nsum by (path, ingress, exported_namespace) (\n  rate(\n    nginx_ingress_controller_request_duration_seconds_count{\n      ingress =~ \"$ingress\",\n      exported_namespace =~ \"$exported_namespace\"\n    }[$__rate_interval]\n  )\n)\n",
+               "expr": "sum by (path, ingress, exported_namespace) (\n  rate(\n    nginx_ingress_controller_request_duration_seconds_count{\n      ingress=~\"$ingress\",\n      exported_namespace=~\"$exported_namespace\",\n      status=~\"[$error_codes].*\"\n    }[$__rate_interval]\n  )\n)\n/\nsum by (path, ingress, exported_namespace) (\n  rate(\n    nginx_ingress_controller_request_duration_seconds_count{\n      ingress =~ \"$ingress\",\n      exported_namespace =~ \"$exported_namespace\"\n    }[$__rate_interval]\n  )\n)\n",
                "format": "time_series",
                "intervalFactor": 2,
                "legendFormat": "{{ path }} - {{ ingress }}/{{ exported_namespace }}",
@@ -637,7 +637,7 @@
          "steppedLine": false,
          "targets": [
             {
-               "expr": "sum (\n  rate(\n    nginx_ingress_controller_request_duration_seconds_count{\n      ingress=~\"$ingress\",\n      exported_namespace=~\"$exported_namespace\",\n      status=~\"500\"\n    }[$__rate_interval]\n  )\n) by(path, ingress, exported_namespace, status)\n",
+               "expr": "sum (\n  rate(\n    nginx_ingress_controller_request_duration_seconds_count{\n      ingress=~\"$ingress\",\n      exported_namespace=~\"$exported_namespace\",\n      status=~\"[$error_codes].*\"\n    }[$__rate_interval]\n  )\n) by(path, ingress, exported_namespace, status)\n",
                "format": "time_series",
                "intervalFactor": 2,
                "legendFormat": "{{ status }} {{ path }} - {{ ingress }}/{{ exported_namespace }}",

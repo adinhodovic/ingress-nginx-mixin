@@ -195,7 +195,7 @@
          "pluginVersion": "7",
          "targets": [
             {
-               "expr": "sum(\n  rate(\n    nginx_ingress_controller_requests{\n      controller_pod=~\"$controller\",\n      controller_class=~\"$controller_class\",\n      namespace=~\"$namespace\",\n      exported_namespace=~\"$exported_namespace\",\n      status!~\"500\"\n    }[$__rate_interval]\n  )\n)\n/\nsum(\n  rate(\n    nginx_ingress_controller_requests{\n      controller_pod=~\"$controller\",\n      controller_class=~\"$controller_class\",\n      exported_namespace=~\"$exported_namespace\",\n      namespace=~\"$namespace\"\n    }[$__rate_interval]\n  )\n)\n",
+               "expr": "sum(\n  rate(\n    nginx_ingress_controller_requests{\n      controller_pod=~\"$controller\",\n      controller_class=~\"$controller_class\",\n      namespace=~\"$namespace\",\n      exported_namespace=~\"$exported_namespace\",\n      status!~\"[$error_codes].*\"\n    }[$__rate_interval]\n  )\n)\n/\nsum(\n  rate(\n    nginx_ingress_controller_requests{\n      controller_pod=~\"$controller\",\n      controller_class=~\"$controller_class\",\n      exported_namespace=~\"$exported_namespace\",\n      namespace=~\"$namespace\"\n    }[$__rate_interval]\n  )\n)\n",
                "format": "time_series",
                "intervalFactor": 2,
                "legendFormat": "",
@@ -464,7 +464,7 @@
          "steppedLine": false,
          "targets": [
             {
-               "expr": "sum(\n  rate(\n    nginx_ingress_controller_requests{\n      controller_pod=~\"$controller\",\n      controller_class=~\"$controller_class\",\n      namespace=~\"$namespace\",\n      exported_namespace=~\"$exported_namespace\",\n      ingress=~\"$ingress\",\n      status!~\"500\"\n    }[$__rate_interval]\n  )\n) by (ingress, exported_namespace)\n/\nsum(\n  rate(\n    nginx_ingress_controller_requests{\n      controller_pod=~\"$controller\",\n      controller_class=~\"$controller_class\",\n      namespace=~\"$namespace\",\n      exported_namespace=~\"$exported_namespace\",\n      ingress=~\"$ingress\"\n    }[$__rate_interval]\n  )\n) by (ingress, exported_namespace)\n",
+               "expr": "sum(\n  rate(\n    nginx_ingress_controller_requests{\n      controller_pod=~\"$controller\",\n      controller_class=~\"$controller_class\",\n      namespace=~\"$namespace\",\n      exported_namespace=~\"$exported_namespace\",\n      ingress=~\"$ingress\",\n      status!~\"[$error_codes].*\"\n    }[$__rate_interval]\n  )\n) by (ingress, exported_namespace)\n/\nsum(\n  rate(\n    nginx_ingress_controller_requests{\n      controller_pod=~\"$controller\",\n      controller_class=~\"$controller_class\",\n      namespace=~\"$namespace\",\n      exported_namespace=~\"$exported_namespace\",\n      ingress=~\"$ingress\"\n    }[$__rate_interval]\n  )\n) by (ingress, exported_namespace)\n",
                "format": "time_series",
                "intervalFactor": 2,
                "legendFormat": "{{ ingress }}/{{ exported_namespace }}",

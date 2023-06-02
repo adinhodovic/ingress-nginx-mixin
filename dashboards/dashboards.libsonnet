@@ -14,6 +14,7 @@ local statPanel = grafana.statPanel;
         'datasource',
         'prometheus',
         'Prometheus',
+        label='Data Source',
         hide='',
       ),
 
@@ -118,7 +119,17 @@ local statPanel = grafana.statPanel;
       ),
 
     local controllerRequestVolumeQuery = |||
-      round(sum(irate(nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",namespace=~"$namespace"}[2m])), 0.001)
+      round(
+        sum(
+          irate(
+            nginx_ingress_controller_requests{
+              controller_pod=~"$controller",
+              controller_class=~"$controller_class",
+              namespace=~"$namespace"
+            }[$__rate_interval]
+          )
+        ), 0.001
+      )
     ||| % $._config,
     local controllerRequestVolumeStatPanel =
       statPanel.new(
@@ -134,7 +145,15 @@ local statPanel = grafana.statPanel;
       ]),
 
     local controllerConnectionsQuery = |||
-      sum(avg_over_time(nginx_ingress_controller_nginx_process_connections{controller_pod=~"$controller",controller_class=~"$controller_class",controller_namespace=~"$namespace"}[2m]))
+      sum(
+        avg_over_time(
+          nginx_ingress_controller_nginx_process_connections{
+            controller_pod=~"$controller",
+            controller_class=~"$controller_class",
+            controller_namespace=~"$namespace"
+          }[$__rate_interval]
+        )
+      )
     ||| % $._config,
     local controllerConnectionsStatPanel =
       statPanel.new(
@@ -152,12 +171,24 @@ local statPanel = grafana.statPanel;
     local controllerSuccessRateQuery = |||
       sum(
         rate(
-          nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",namespace=~"$namespace", exported_namespace=~"$exported_namespace",status!~"[$error_codes].*"}[2m]
-          )
-      ) /
+          nginx_ingress_controller_requests{
+            controller_pod=~"$controller",
+            controller_class=~"$controller_class",
+            namespace=~"$namespace",
+            exported_namespace=~"$exported_namespace",
+            status!~"[$error_codes].*"
+          }[$__rate_interval]
+        )
+      )
+      /
       sum(
         rate(
-          nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",exported_namespace=~"$exported_namespace",namespace=~"$namespace"}[2m]
+          nginx_ingress_controller_requests{
+            controller_pod=~"$controller",
+            controller_class=~"$controller_class",
+            exported_namespace=~"$exported_namespace",
+            namespace=~"$namespace"
+          }[$__rate_interval]
         )
       )
     ||| % $._config,
@@ -176,7 +207,15 @@ local statPanel = grafana.statPanel;
       ]),
 
     local controllerConfigReloadsQuery = |||
-      avg(irate(nginx_ingress_controller_success{controller_pod=~"$controller",controller_class=~"$controller_class",controller_namespace=~"$namespace"}[1m])) * 60
+      avg(
+        irate(
+          nginx_ingress_controller_success{
+            controller_pod=~"$controller",
+            controller_class=~"$controller_class",
+            controller_namespace=~"$namespace"
+          }[$__rate_interval]
+        )
+      ) * 60
     ||| % $._config,
     local controllerConfigReloadsStatPanel =
       statPanel.new(
@@ -191,7 +230,12 @@ local statPanel = grafana.statPanel;
       ]),
 
     local controllerConfigLastStatusQuery = |||
-      count(nginx_ingress_controller_config_last_reload_successful{controller_pod=~"$controller",controller_namespace=~"$namespace"} == 0) OR vector(0)
+      count(
+        nginx_ingress_controller_config_last_reload_successful{
+          controller_pod=~"$controller",
+          controller_namespace=~"$namespace"
+        } == 0
+      ) OR vector(0)
     ||| % $._config,
     local controllerConfigLastStatusStatPanel =
       statPanel.new(
@@ -215,7 +259,13 @@ local statPanel = grafana.statPanel;
       round(
         sum(
           irate(
-            nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",controller_namespace=~"$namespace",ingress=~"$ingress", exported_namespace=~"$exported_namespace"}[2m]
+            nginx_ingress_controller_requests{
+              controller_pod=~"$controller",
+              controller_class=~"$controller_class",
+              controller_namespace=~"$namespace",
+              ingress=~"$ingress",
+              exported_namespace=~"$exported_namespace"
+            }[$__rate_interval]
           )
         ) by (ingress, exported_namespace), 0.001
       )
@@ -243,12 +293,26 @@ local statPanel = grafana.statPanel;
     local ingressSuccessRateQuery = |||
       sum(
         rate(
-          nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",namespace=~"$namespace",ingress=~"$ingress",exported_namespace=~"$exported_namespace", status!~"[$error_codes].*"}[2m]
+          nginx_ingress_controller_requests{
+            controller_pod=~"$controller",
+            controller_class=~"$controller_class",
+            namespace=~"$namespace",
+            exported_namespace=~"$exported_namespace",
+            ingress=~"$ingress",
+            status!~"[$error_codes].*"
+          }[$__rate_interval]
         )
-      ) by (ingress, exported_namespace) /
+      ) by (ingress, exported_namespace)
+      /
       sum(
         rate(
-          nginx_ingress_controller_requests{controller_pod=~"$controller",controller_class=~"$controller_class",namespace=~"$namespace",ingress=~"$ingress", exported_namespace=~"$exported_namespace"}[2m]
+          nginx_ingress_controller_requests{
+            controller_pod=~"$controller",
+            controller_class=~"$controller_class",
+            namespace=~"$namespace",
+            exported_namespace=~"$exported_namespace",
+            ingress=~"$ingress"
+          }[$__rate_interval]
         )
       ) by (ingress, exported_namespace)
     ||| % $._config,
@@ -280,7 +344,14 @@ local statPanel = grafana.statPanel;
       histogram_quantile(
         0.50, sum(
           rate(
-            nginx_ingress_controller_request_duration_seconds_bucket{ingress!="",controller_pod=~"$controller",controller_class=~"$controller_class",controller_namespace=~"$namespace", exported_namespace=~"$exported_namespace", ingress=~"$ingress"}[2m]
+            nginx_ingress_controller_request_duration_seconds_bucket{
+              ingress!="",
+              controller_pod=~"$controller",
+              controller_class=~"$controller_class",
+              controller_namespace=~"$namespace",
+              exported_namespace=~"$exported_namespace",
+              ingress=~"$ingress"
+            }[$__rate_interval]
           )
         ) by (le, ingress, exported_namespace)
       )
@@ -292,7 +363,14 @@ local statPanel = grafana.statPanel;
     local ingressRequestSizeQuery = |||
       sum(
         irate(
-          nginx_ingress_controller_request_size_sum{ingress!="",controller_pod=~"$controller",controller_class=~"$controller_class",controller_namespace=~"$namespace",exported_namespace=~"$exported_namespace",ingress=~"$ingress"}[2m]
+          nginx_ingress_controller_request_size_sum{
+            ingress!="",
+            controller_pod=~"$controller",
+            controller_class=~"$controller_class",
+            controller_namespace=~"$namespace",
+            exported_namespace=~"$exported_namespace",
+            ingress=~"$ingress"
+          }[$__rate_interval]
         )
       ) by (ingress, exported_namespace)
     |||,
@@ -479,7 +557,7 @@ local statPanel = grafana.statPanel;
             nginx_ingress_controller_request_duration_seconds_bucket{
               ingress =~ "$ingress",
               exported_namespace=~"$exported_namespace"
-            }[1m]
+            }[$__rate_interval]
           )
         )
       )
@@ -525,7 +603,7 @@ local statPanel = grafana.statPanel;
             nginx_ingress_controller_response_duration_seconds_bucket{
               ingress =~ "$ingress",
               exported_namespace=~"$exported_namespace"
-            }[1m]
+            }[$__rate_interval]
           )
         )
       )
@@ -574,7 +652,7 @@ local statPanel = grafana.statPanel;
           nginx_ingress_controller_request_duration_seconds_count{
             ingress =~ "$ingress",
             exported_namespace=~"$exported_namespace"
-          }[1m]
+          }[$__rate_interval]
         )
       )
     ||| % $._config,
@@ -607,7 +685,7 @@ local statPanel = grafana.statPanel;
             nginx_ingress_controller_response_duration_seconds_bucket{
               ingress =~ "$ingress",
               exported_namespace=~"$exported_namespace"
-            }[1m]
+            }[$__rate_interval]
           )
         )
       )
@@ -634,14 +712,24 @@ local statPanel = grafana.statPanel;
       ),
 
     local ingressResponseErrorRateQuery = |||
-      sum by (path, ingress, exported_namespace) (rate(nginx_ingress_controller_request_duration_seconds_count{
-        ingress =~ "$ingress",
-        exported_namespace =~ "$exported_namespace",
-        status =~ "[$error_codes].*"
-      }[1m])) / sum by (path, ingress, exported_namespace) (rate(nginx_ingress_controller_request_duration_seconds_count{
-        ingress =~ "$ingress",
-        exported_namespace =~ "$exported_namespace"
-      }[1m]))
+      sum by (path, ingress, exported_namespace) (
+        rate(
+          nginx_ingress_controller_request_duration_seconds_count{
+            ingress=~"$ingress",
+            exported_namespace=~"$exported_namespace",
+            status=~"[$error_codes].*"
+          }[$__rate_interval]
+        )
+      )
+      /
+      sum by (path, ingress, exported_namespace) (
+        rate(
+          nginx_ingress_controller_request_duration_seconds_count{
+            ingress =~ "$ingress",
+            exported_namespace =~ "$exported_namespace"
+          }[$__rate_interval]
+        )
+      )
     ||| % $._config,
 
     local ingressResponseErrorRateGraphPanel =
@@ -666,7 +754,12 @@ local statPanel = grafana.statPanel;
 
     local ingressUpstreamTimeConsumedQuery = |||
       sum by (path, ingress, exported_namespace) (
-        rate(nginx_ingress_controller_response_duration_seconds_sum{ingress =~ "$ingress", exported_namespace =~ "$exported_namespace"}[1m])
+        rate(
+          nginx_ingress_controller_response_duration_seconds_sum{
+            ingress =~ "$ingress",
+            exported_namespace =~ "$exported_namespace"
+          }[$__rate_interval]
+        )
       )
     ||| % $._config,
 
@@ -694,10 +787,10 @@ local statPanel = grafana.statPanel;
       sum (
         rate(
           nginx_ingress_controller_request_duration_seconds_count{
-            ingress =~ "$ingress",
-            exported_namespace =~ "$exported_namespace",
-            status =~"[$error_codes].*",
-          }[1m]
+            ingress=~"$ingress",
+            exported_namespace=~"$exported_namespace",
+            status=~"[$error_codes].*"
+          }[$__rate_interval]
         )
       ) by(path, ingress, exported_namespace, status)
     ||| % $._config,
@@ -726,16 +819,18 @@ local statPanel = grafana.statPanel;
       sum (
         rate (
             nginx_ingress_controller_response_size_sum {
-              ingress =~ "$ingress",
-              exported_namespace =~ "$exported_namespace",
-            }[1m]
+              ingress=~"$ingress",
+              exported_namespace=~"$exported_namespace",
+            }[$__rate_interval]
         )
-      )  by (path, ingress, exported_namespace) / sum (
+      )  by (path, ingress, exported_namespace)
+      /
+      sum (
         rate(
-            nginx_ingress_controller_response_size_count {
-              ingress =~ "$ingress",
-              exported_namespace =~ "$exported_namespace",
-            }[1m]
+          nginx_ingress_controller_response_size_count {
+              ingress=~"$ingress",
+              exported_namespace=~"$exported_namespace",
+          }[$__rate_interval]
         )
       ) by (path, ingress, exported_namespace)
     ||| % $._config,

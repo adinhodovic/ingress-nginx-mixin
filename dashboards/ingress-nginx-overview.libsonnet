@@ -150,9 +150,9 @@ local tbOverride = tbStandardOptions.override;
           irate(
             nginx_ingress_controller_requests{
               job=~"$job",
+              namespace=~"$namespace",
               controller_pod=~"$controller",
-              controller_class=~"$controller_class",
-              namespace=~"$namespace"
+              controller_class=~"$controller_class"
             }[$__rate_interval]
           )
         ), 0.001
@@ -537,7 +537,7 @@ local tbOverride = tbStandardOptions.override;
             tbPanelOptions.link.withTitle('Go To Ingress') +  // todo: Fix job
             tbPanelOptions.link.withType('dashboard') +
             tbPanelOptions.link.withUrl(
-              '/d/%s/ingress-nginx-overview?var-exported_namespace=${__data.fields.Namespace}&var-job=${__data.fields.Job}&var-ingress=${__data.fields.Ingress}'
+              '/d/%s/ingress-nginx-overview?var-exported_namespace=${__data.fields.Namespace}&var-ingress=${__data.fields.Ingress}'
               % $._config.requestHandlingPerformanceDashboardUid
             ) +
             tbPanelOptions.link.withTargetBlank(true)

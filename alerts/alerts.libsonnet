@@ -16,7 +16,7 @@
             annotations: {
               summary: 'Nginx high HTTP 4xx error rate.',
               description: 'More than %(ingressNginx4xxThreshold)s%% HTTP requests with status 4xx for {{ $labels.exported_namespace }}/{{ $labels.ingress }} the past %(ingressNginx4xxInterval)s.' % $._config,
-              dashboard_url: $._config.dashboardUrl,
+              dashboard_url: $._config.overviewDashboardUrl + '?var-exported_namespace={{ $labels.exported_namespace }}&var-ingress={{ $labels.ingress }}',
             },
           },
           {
@@ -28,7 +28,7 @@
             annotations: {
               summary: 'Nginx high HTTP 5xx error rate.',
               description: 'More than %(ingressNginx5xxThreshold)s%% HTTP requests with status 5xx for {{ $labels.exported_namespace }}/{{ $labels.ingress }} the past %(ingressNginx5xxInterval)s.' % $._config,
-              dashboard_url: $._config.dashboardUrl,
+              dashboard_url: $._config.overviewDashboardUrl + '?var-exported_namespace={{ $labels.exported_namespace }}&var-ingress={{ $labels.ingress }}',
             },
             labels: {
               severity: $._config.ingressNginx5xxSeverity,

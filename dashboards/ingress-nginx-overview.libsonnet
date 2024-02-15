@@ -56,10 +56,23 @@ local hmQueryOptions = heatmapPanel.queryOptions;
       ) +
       datasource.generalOptions.withLabel('Data source'),
 
+    local jobVariable =
+      query.new(
+        'job',
+        'label_values(nginx_ingress_controller_config_hash{}, job)'
+      ) +
+      query.withDatasourceFromVariable(datasourceVariable) +
+      query.withSort(1) +
+      query.generalOptions.withLabel('Job') +
+      query.selectionOptions.withMulti(false) +
+      query.selectionOptions.withIncludeAll(false) +
+      query.refresh.onLoad() +
+      query.refresh.onTime(),
+
     local namespaceVariable =
       query.new(
         'namespace',
-        'label_values(nginx_ingress_controller_config_hash, controller_namespace)',
+        'label_values(nginx_ingress_controller_config_hash{job="$job"}, controller_namespace)',
       ) +
       query.withDatasourceFromVariable(datasourceVariable) +
       query.withSort(1) +
@@ -75,6 +88,7 @@ local hmQueryOptions = heatmapPanel.queryOptions;
         |||
           label_values(
             nginx_ingress_controller_config_hash{
+              job="$job",
               controller_namespace=~"$namespace"
             },
             controller_class
@@ -96,6 +110,7 @@ local hmQueryOptions = heatmapPanel.queryOptions;
         |||
           label_values(
             nginx_ingress_controller_config_hash{
+              job="$job",
               controller_namespace=~"$namespace",
               controller_class=~"$controller_class"
             },
@@ -117,6 +132,7 @@ local hmQueryOptions = heatmapPanel.queryOptions;
         |||
           label_values(
             nginx_ingress_controller_requests{
+              job="$job",
               namespace=~"$namespace",
               controller_class=~"$controller_class",
               controller_pod=~"$controller"
@@ -139,6 +155,7 @@ local hmQueryOptions = heatmapPanel.queryOptions;
         |||
           label_values(
             nginx_ingress_controller_requests{
+              job="$job",
               namespace=~"$namespace",
               controller_class=~"$controller_class",
               controller_pod=~"$controller",
@@ -179,11 +196,6 @@ local hmQueryOptions = heatmapPanel.queryOptions;
       ingressVariable,
       errorCodesVariable,
     ],
-
-    local controllerRow =
-      row.new(
-        title='Controller'
-      ),
 
     local controllerRequestVolumeQuery = |||
       round(
@@ -347,11 +359,6 @@ local hmQueryOptions = heatmapPanel.queryOptions;
         stStandardOptions.threshold.step.withColor('red'),
       ]),
 
-    local ingressRow =
-      row.new(
-        title='Ingress'
-      ),
-
     local ingressRequestQuery = |||
       round(
         sum(
@@ -367,25 +374,30 @@ local hmQueryOptions = heatmapPanel.queryOptions;
         ) by (ingress, exported_namespace), 0.001
       )
     ||| % $._config,
-    local ingressRequestVolumeGraphPanel =
-      graphPanel.new(
+    local ingressRequestVolumeTimeSeriesPanel =
+      timeSeriesPanel.new(
         'Ingress Request Volume',
-        datasource='$datasource',
-        format='reqps',
-        legend_show=true,
-        legend_values=true,
-        legend_alignAsTable=true,
-        legend_rightSide=true,
-        legend_avg=true,
-        legend_max=true,
-        legend_hideZero=true,
-      )
-      .addTarget(
-        prometheus.target(
-          ingressRequestQuery,
-          legendFormat='{{ ingress }}/{{ exported_namespace }}',
-        )
-      ),
+      ) +
+      tsQueryOptions.withTargets(
+        [
+          prometheus.new(
+            '$datasource',
+            ingressRequestQuery,
+          ) +
+          prometheus.withLegendFormat(
+            '{{ ingress }}/{{ exported_namespace }}'
+          ),
+        ]
+      ) +
+      tsStandardOptions.withUnit('reqps') +
+      tsOptions.tooltip.withMode('multi') +
+      tsOptions.tooltip.withSort('desc') +
+      tsLegend.withShowLegend(true) +
+      tsLegend.withDisplayMode('table') +
+      tsLegend.withPlacement('right') +
+      tsLegend.withCalcs(['mean', 'max']) +
+      tsLegend.withSortBy('Mean') +
+      tsLegend.withSortDesc(true),
 
     local ingressSuccessRateQuery = |||
       sum(
@@ -414,26 +426,30 @@ local hmQueryOptions = heatmapPanel.queryOptions;
       ) by (ingress, exported_namespace)
     ||| % $._config,
     local ingressSuccessRateGraphPanel =
-      graphPanel.new(
+      timeSeriesPanel.new(
         'Ingress Success Rate (non $error_codes-xx responses)',
-        datasource='$datasource',
-        format='percentunit',
-        fill='0',
-        linewidth='3',
-        legend_show=true,
-        legend_values=true,
-        legend_alignAsTable=true,
-        legend_rightSide=true,
-        legend_avg=true,
-        legend_max=true,
-        legend_hideZero=true,
-      )
-      .addTarget(
-        prometheus.target(
-          ingressSuccessRateQuery,
-          legendFormat='{{ ingress }}/{{ exported_namespace }}',
-        )
-      ),
+      ) +
+      tsQueryOptions.withTargets(
+        [
+          prometheus.new(
+            '$datasource',
+            ingressSuccessRateQuery,
+          ) +
+          prometheus.withLegendFormat(
+            '{{ ingress }}/{{ exported_namespace }}'
+          ),
+        ]
+      ) +
+      tsStandardOptions.withUnit('percentunit') +
+      tsOptions.tooltip.withMode('multi') +
+      tsOptions.tooltip.withSort('desc') +
+      tsLegend.withShowLegend(true) +
+      tsLegend.withDisplayMode('table') +
+      tsLegend.withPlacement('right') +
+      tsLegend.withCalcs(['mean', 'max']) +
+      tsLegend.withSortBy('Mean') +
+      tsLegend.withSortDesc(true) +
+      tsCustom.withSpanNulls(false),
 
     // Table
     // Percentile queries
@@ -452,7 +468,7 @@ local hmQueryOptions = heatmapPanel.queryOptions;
           )
         ) by (le, ingress, exported_namespace)
       )
-    ||| % $._config,
+    |||,
     local ingress90thPercentileResponseQuery = std.strReplace(ingress50thPercentileResponseQuery, '0.50', '0.90'),
     local ingress99thPercentileResponseQuery = std.strReplace(ingress50thPercentileResponseQuery, '0.50', '0.99'),
 
@@ -474,143 +490,258 @@ local hmQueryOptions = heatmapPanel.queryOptions;
     local ingressResponseSizeQuery = std.strReplace(ingressRequestSizeQuery, 'request', 'response'),
 
     local ingressResponseTable =
-      grafana.tablePanel.new(
+      tablePanel.new(
         'Ingress Percentile Response Times and Transfer Rates',
-        datasource='$datasource',
-        sort={
-          col: 1,
-          desc: false,
-        },
-        styles=[
-          {
-            alias: 'Time',
-            dateFormat: 'YYYY-MM-DD HH:mm:ss',
-            type: 'hidden',
-            pattern: 'Time',
-          },
-          {
-            alias: 'Ingress',
-            pattern: 'ingress',
-          },
-          {
-            alias: 'Namespace',
-            pattern: 'exported_namespace',
-          },
-          {
-            alias: 'P50 Latency',
-            pattern: 'Value #A',
-            type: 'number',
-            unit: 'dtdurations',
-          },
-          {
-            alias: 'P90 Latency',
-            pattern: 'Value #B',
-            type: 'number',
-            unit: 'dtdurations',
-          },
-          {
-            alias: 'P99 Latency',
-            pattern: 'Value #C',
-            type: 'number',
-            unit: 'dtdurations',
-          },
-          {
-            alias: 'IN',
-            pattern: 'Value #D',
-            type: 'number',
-            unit: 'Bps',
-            decimals: '0',
-          },
-          {
-            alias: 'OUT',
-            pattern: 'Value #E',
-            type: 'number',
-            unit: 'Bps',
-            decimals: '0',
-          },
+      ) +
+      tbOptions.withSortBy(
+        tbOptions.sortBy.withDisplayName('P50 Latency') +
+        tbOptions.sortBy.withDesc(true)
+      ) +
+      tbOptions.footer.TableFooterOptions.withEnablePagination(true) +
+      tbStandardOptions.withUnit('dtdurations') +
+      tbQueryOptions.withTargets(
+        [
+          prometheus.new(
+            '$datasource',
+            ingress50thPercentileResponseQuery,
+          ) +
+          prometheus.withFormat('table') +
+          prometheus.withInstant(true),
+          prometheus.new(
+            '$datasource',
+            ingress90thPercentileResponseQuery,
+          ) +
+          prometheus.withFormat('table') +
+          prometheus.withInstant(true),
+          prometheus.new(
+            '$datasource',
+            ingress99thPercentileResponseQuery,
+          ) +
+          prometheus.withFormat('table') +
+          prometheus.withInstant(true),
+          prometheus.new(
+            '$datasource',
+            ingressRequestSizeQuery,
+          ) +
+          prometheus.withFormat('table') +
+          prometheus.withInstant(true),
+          prometheus.new(
+            '$datasource',
+            ingressResponseSizeQuery,
+          ) +
+          prometheus.withFormat('table') +
+          prometheus.withInstant(true),
         ]
-      )
-      .addTarget(prometheus.target(ingress50thPercentileResponseQuery, format='table', instant=true))
-      .addTarget(prometheus.target(ingress90thPercentileResponseQuery, format='table', instant=true))
-      .addTarget(prometheus.target(ingress99thPercentileResponseQuery, format='table', instant=true))
-      .addTarget(prometheus.target(ingressRequestSizeQuery, format='table', instant=true))
-      .addTarget(prometheus.target(ingressResponseSizeQuery, format='table', instant=true)),
+      ) +
+      tbQueryOptions.withTransformations([
+        tbQueryOptions.transformation.withId(
+          'merge'
+        ),
+        tbQueryOptions.transformation.withId(
+          'organize'
+        ) +
+        tbQueryOptions.transformation.withOptions(
+          {
+            renameByName: {
+              job: 'Job',
+              exported_namespace: 'Namespace',
+              ingress: 'Ingress',
+              'Value #A': 'P50 Latency',
+              'Value #B': 'P95 Latency',
+              'Value #C': 'P99 Latency',
+              'Value #D': 'IN',
+              'Value #E': 'OUT',
+            },
+            indexByName: {
+              namespace: 0,
+              job: 1,
+              ingress: 2,
+              'Value #A': 3,
+              'Value #B': 4,
+              'Value #C': 5,
+              'Value #D': 6,
+              'Value #E': 7,  // TODO(adinhodovic): unit: BPS
+            },
+            excludeByName: {
+              Time: true,
+            },
+          }
+        ),
+      ]) +
+      tbStandardOptions.withOverrides([
+        tbOverride.byName.new('Ingress') +
+        tbOverride.byName.withPropertiesFromOptions(
+          tbStandardOptions.withLinks(
+            tbPanelOptions.link.withTitle('Go To Ingress') +  // todo: Fix job
+            tbPanelOptions.link.withType('dashboard') +
+            tbPanelOptions.link.withUrl(
+              '/d/%s/ingress-nginx-overview?var-exported_namespace=${__data.fields.Namespace}&var-job=${__data.fields.Job}&var-ingress=${__data.fields.Ingress}' % $._config.requestsByViewDashboardUid
+            ) +
+            tbPanelOptions.link.withTargetBlank(true)
+          )
+        ),
+      ]),
 
+    local certificateExpiryQuery = |||
+      avg(nginx_ingress_controller_ssl_expire_time_seconds{pod=~"$controller"}) by (host) - time()
+    ||| % $._config,
+
+    local certificateTable =
+      tablePanel.new(
+        'Ingress Certificate Expiry',
+      ) +
+      tbOptions.withSortBy(
+        tbOptions.sortBy.withDisplayName('TTL') +
+        tbOptions.sortBy.withDesc(true)
+      ) +
+      tbOptions.footer.TableFooterOptions.withEnablePagination(true) +
+      tbStandardOptions.withUnit('dtdurations') +
+      tbQueryOptions.withTargets(
+        [
+          prometheus.new(
+            '$datasource',
+            certificateExpiryQuery,
+          ) +
+          prometheus.withFormat('table') +
+          prometheus.withInstant(true),
+        ]
+      ) +
+      tbQueryOptions.withTransformations([
+        tbQueryOptions.transformation.withId(
+          'merge'
+        ),
+        tbQueryOptions.transformation.withId(
+          'organize'
+        ) +
+        tbQueryOptions.transformation.withOptions(
+          {
+            renameByName: {
+              host: 'Host',
+              'Value #A': 'TTL',
+            },
+            indexByName: {
+              host: 0,
+              'Value #A': 1,
+              // alias: 'TTL',
+              // pattern: 'Value',
+              // type: 'number',
+              // unit: 's',
+              // decimals: '0',
+              // colorMode: 'cell',
+              // colors: [
+              //   'null',
+              //   'red',
+              //   'green',
+              // ],
+              // thresholds: [
+              //   0,
+              //   1814400,
+              // ],
+            },
+            excludeByName: {
+              Time: true,
+            },
+          }
+        ),
+      ]) +
+      tbStandardOptions.withOverrides([
+        tbOverride.byName.new('Ingress') +
+        tbOverride.byName.withPropertiesFromOptions(
+          tbStandardOptions.withLinks(
+            tbPanelOptions.link.withTitle('Go To Site') +  // todo: Fix job
+            tbPanelOptions.link.withType('link') +
+            tbPanelOptions.link.withUrl(
+              '${__data.fields.Host}'
+            ) +
+            tbPanelOptions.link.withTargetBlank(true)
+          )
+        ),
+      ]),
+
+    local controllerRow =
+      row.new(
+        title='Controller'
+      ),
+
+    local ingressRow =
+      row.new(
+        title='Ingress'
+      ),
 
     local certificateRow =
       row.new(
         title='Certificates'
       ),
 
-    local certificateExpiryQuery = |||
-      avg(nginx_ingress_controller_ssl_expire_time_seconds{pod=~"$controller"}) by (host) - time()
-    ||| % $._config,
-    local certificateTable =
-      grafana.tablePanel.new(
-        'Ingress Certificate Expiry',
-        datasource='$datasource',
-        sort={
-          col: 2,
-          desc: false,
-        },
-        styles=[
-          {
-            alias: 'Time',
-            dateFormat: 'YYYY-MM-DD HH:mm:ss',
-            type: 'hidden',
-            pattern: 'Time',
-          },
-          {
-            alias: 'Host',
-            pattern: 'host',
-          },
-          {
-            alias: 'TTL',
-            pattern: 'Value',
-            type: 'number',
-            unit: 's',
-            decimals: '0',
-            colorMode: 'cell',
-            colors: [
-              'null',
-              'red',
-              'green',
-            ],
-            thresholds: [
-              0,
-              1814400,
-            ],
-          },
-        ]
-      )
-      .addTarget(prometheus.target(certificateExpiryQuery, format='table', instant=true)),
-
     'ingress-nginx-overview.json':
-      // Core dashboard
+      $._config.bypassDashboardValidation +
       dashboard.new(
         'Ingress Nginx / Overview',
-        description='A dashboard that monitors Ingress-nginx. It is created using the (Ingress-Nginx-mixin)[https://github.com/adinhodovic/ingress-nginx-mixin]',
-        uid=$._config.overviewDashboardUid,
-        tags=$._config.tags,
-        time_from='now-1h',
-        time_to='now',
-        editable='true',
-        timezone='utc'
-      )
-      .addPanel(controllerRow, gridPos={ h: 1, w: 24, x: 0, y: 0 })
-      .addPanel(controllerRequestVolumeStatPanel, gridPos={ h: 4, w: 6, x: 0, y: 1 })
-      .addPanel(controllerConnectionsStatPanel, gridPos={ h: 4, w: 6, x: 6, y: 1 })
-      .addPanel(controllerSuccessRateStatPanel, gridPos={ h: 4, w: 6, x: 12, y: 1 })
-      .addPanel(controllerConfigReloadsStatPanel, gridPos={ h: 4, w: 3, x: 18, y: 1 })
-      .addPanel(controllerConfigLastStatusStatPanel, gridPos={ h: 4, w: 3, x: 21, y: 1 })
-      .addPanel(ingressRow, gridPos={ h: 1, w: 24, x: 0, y: 5 })
-      .addPanel(ingressRequestVolumeGraphPanel, gridPos={ h: 8, w: 12, x: 0, y: 6 })
-      .addPanel(ingressSuccessRateGraphPanel, gridPos={ h: 8, w: 12, x: 12, y: 6 })
-      .addPanel(ingressResponseTable, gridPos={ h: 8, w: 24, x: 0, y: 14 })
-      .addPanel(certificateRow, gridPos={ h: 1, w: 24, x: 0, y: 22 })
-      .addPanel(certificateTable, gridPos={ h: 8, w: 24, x: 0, y: 23 })
-      + { templating+: { list+: overviewDashboardTemplates } },
-
+      ) +
+      dashboard.withDescription('A dashboard that monitors Ingress-nginx. It is created using the (Ingress-Nginx-mixin)[https://github.com/adinhodovic/ingress-nginx-mixin]') +
+      dashboard.withUid($._config.overviewDashboardUid) +
+      dashboard.withTags($._config.tags) +
+      dashboard.withTimezone('utc') +
+      dashboard.withEditable(true) +
+      dashboard.time.withFrom('now-1h') +
+      dashboard.time.withTo('now') +
+      dashboard.withVariables(variables) +
+      dashboard.withLinks(
+        [
+          dashboard.link.dashboards.new('Ingress Nginx Dashboards', $._config.tags) +
+          dashboard.link.link.options.withTargetBlank(true),
+        ]
+      ) +
+      dashboard.withPanels(
+        [
+          controllerRow +
+          row.gridPos.withX(0) +
+          row.gridPos.withY(0) +
+          row.gridPos.withW(24) +
+          row.gridPos.withH(1),
+        ] +
+        grid.makeGrid(
+          [controllerRequestVolumeStatPanel, controllerConnectionsStatPanel, controllerSuccessRateStatPanel],
+          panelWidth=6,
+          panelHeight=4,
+          startY=1
+        ) +
+        grid.makeGrid(
+          [controllerConfigReloadsStatPanel, controllerConfigLastStatusStatPanel],
+          panelWidth=3,
+          panelHeight=4,
+          startY=18
+        ) +
+        [
+          ingressRow +
+          row.gridPos.withX(0) +
+          row.gridPos.withY(5) +
+          row.gridPos.withW(24) +
+          row.gridPos.withH(1),
+        ] +
+        grid.makeGrid(
+          [ingressRequestVolumeGraphPanel, ingressSuccessRateGraphPanel],
+          panelWidth=12,
+          panelHeight=8,
+          startY=6
+        ) +
+        [
+          ingressResponseTable +
+          table.gridPos.withX(0) +
+          table.gridPos.withY(14) +
+          table.gridPos.withW(24) +
+          table.gridPos.withH(8),
+          certificateRow +
+          row.gridPos.withX(0) +
+          row.gridPos.withY(22) +
+          row.gridPos.withW(24) +
+          row.gridPos.withH(1),
+          certificateTable +
+          table.gridPos.withX(0) +
+          table.gridPos.withY(23) +
+          table.gridPos.withW(24) +
+          table.gridPos.withH(8),
+        ] +
 
     local requestHandlingPerformanceDashboardTemplates = [
       prometheusTemplate,

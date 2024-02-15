@@ -70,7 +70,7 @@
                   "type": "prometheus",
                   "uid": "$datasource"
                },
-               "expr": "round(\n  sum(\n    irate(\n      nginx_ingress_controller_requests{\n        job=~\"$job\",\n        controller_pod=~\"$controller\",\n        controller_class=~\"$controller_class\",\n        namespace=~\"$namespace\"\n      }[$__rate_interval]\n    )\n  ), 0.001\n)\n"
+               "expr": "round(\n  sum(\n    irate(\n      nginx_ingress_controller_requests{\n        job=~\"$job\",\n        namespace=~\"$namespace\",\n        controller_pod=~\"$controller\",\n        controller_class=~\"$controller_class\"\n      }[$__rate_interval]\n    )\n  ), 0.001\n)\n"
             }
          ],
          "title": "Controller Request Volume",
@@ -413,7 +413,7 @@
                               "targetBlank": true,
                               "title": "Go To Ingress",
                               "type": "dashboard",
-                              "url": "/d/ingress-nginx-request-handling-jqkw/ingress-nginx-overview?var-exported_namespace=${__data.fields.Namespace}&var-job=${__data.fields.Job}&var-ingress=${__data.fields.Ingress}"
+                              "url": "/d/ingress-nginx-request-handling-jqkw/ingress-nginx-overview?var-exported_namespace=${__data.fields.Namespace}&var-ingress=${__data.fields.Ingress}"
                            }
                         ]
                      }

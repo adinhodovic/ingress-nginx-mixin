@@ -83,7 +83,6 @@ local tbOverride = tbStandardOptions.override;
       query.refresh.onLoad() +
       query.refresh.onTime(),
 
-
     local controllerVariable =
       query.new(
         'controller',

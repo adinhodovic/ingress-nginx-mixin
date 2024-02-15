@@ -149,6 +149,7 @@ local tbOverride = tbStandardOptions.override;
         sum(
           irate(
             nginx_ingress_controller_requests{
+              job=~"$job",
               controller_pod=~"$controller",
               controller_class=~"$controller_class",
               namespace=~"$namespace"
@@ -180,6 +181,7 @@ local tbOverride = tbStandardOptions.override;
       sum(
         avg_over_time(
           nginx_ingress_controller_nginx_process_connections{
+            job=~"$job",
             controller_pod=~"$controller",
             controller_class=~"$controller_class",
             controller_namespace=~"$namespace"
@@ -197,6 +199,7 @@ local tbOverride = tbStandardOptions.override;
           controllerConnectionsQuery,
         )
       ) +
+      stStandardOptions.withUnit('short') +
       stOptions.reduceOptions.withCalcs(['lastNotNull']) +
       stStandardOptions.thresholds.withSteps([
         stStandardOptions.threshold.step.withValue(0.0) +
@@ -210,6 +213,7 @@ local tbOverride = tbStandardOptions.override;
       sum(
         rate(
           nginx_ingress_controller_requests{
+            job=~"$job",
             controller_pod=~"$controller",
             controller_class=~"$controller_class",
             namespace=~"$namespace",
@@ -222,6 +226,7 @@ local tbOverride = tbStandardOptions.override;
       sum(
         rate(
           nginx_ingress_controller_requests{
+            job=~"$job",
             controller_pod=~"$controller",
             controller_class=~"$controller_class",
             exported_namespace=~"$exported_namespace",
@@ -255,6 +260,7 @@ local tbOverride = tbStandardOptions.override;
       avg(
         irate(
           nginx_ingress_controller_success{
+            job=~"$job",
             controller_pod=~"$controller",
             controller_class=~"$controller_class",
             controller_namespace=~"$namespace"
@@ -282,6 +288,7 @@ local tbOverride = tbStandardOptions.override;
     local controllerConfigLastStatusQuery = |||
       count(
         nginx_ingress_controller_config_last_reload_successful{
+          job=~"$job",
           controller_pod=~"$controller",
           controller_namespace=~"$namespace"
         } == 0
@@ -311,6 +318,7 @@ local tbOverride = tbStandardOptions.override;
         sum(
           irate(
             nginx_ingress_controller_requests{
+              job=~"$job",
               controller_pod=~"$controller",
               controller_class=~"$controller_class",
               controller_namespace=~"$namespace",
@@ -353,6 +361,7 @@ local tbOverride = tbStandardOptions.override;
       sum(
         rate(
           nginx_ingress_controller_requests{
+            job=~"$job",
             controller_pod=~"$controller",
             controller_class=~"$controller_class",
             namespace=~"$namespace",
@@ -366,6 +375,7 @@ local tbOverride = tbStandardOptions.override;
       sum(
         rate(
           nginx_ingress_controller_requests{
+            job=~"$job",
             controller_pod=~"$controller",
             controller_class=~"$controller_class",
             namespace=~"$namespace",
@@ -408,6 +418,7 @@ local tbOverride = tbStandardOptions.override;
         0.50, sum(
           rate(
             nginx_ingress_controller_request_duration_seconds_bucket{
+              job=~"$job",
               ingress!="",
               controller_pod=~"$controller",
               controller_class=~"$controller_class",
@@ -427,6 +438,7 @@ local tbOverride = tbStandardOptions.override;
       sum(
         irate(
           nginx_ingress_controller_request_size_sum{
+            job=~"$job",
             ingress!="",
             controller_pod=~"$controller",
             controller_class=~"$controller_class",
@@ -542,7 +554,12 @@ local tbOverride = tbStandardOptions.override;
       ]),
 
     local certificateExpiryQuery = |||
-      avg(nginx_ingress_controller_ssl_expire_time_seconds{pod=~"$controller"}) by (host) - time()
+      avg(
+        nginx_ingress_controller_ssl_expire_time_seconds{
+          job=~"$job",
+          pod=~"$controller"
+        }
+      ) by (host) - time()
     ||| % $._config,
 
     local certificateTable =

@@ -93,8 +93,9 @@ local tsLegend = tsOptions.legend;
         sum by (le, ingress, exported_namespace)(
           rate(
             nginx_ingress_controller_request_duration_seconds_bucket{
-              ingress =~ "$ingress",
-              exported_namespace=~"$exported_namespace"
+              job=~"$job",
+              exported_namespace=~"$exported_namespace",
+              ingress =~ "$ingress"
             }[$__rate_interval]
           )
         )
@@ -147,8 +148,9 @@ local tsLegend = tsOptions.legend;
         sum by (le, ingress, exported_namespace)(
           rate(
             nginx_ingress_controller_response_duration_seconds_bucket{
-              ingress =~ "$ingress",
-              exported_namespace=~"$exported_namespace"
+              job=~"$job",
+              exported_namespace=~"$exported_namespace",
+              ingress =~ "$ingress"
             }[$__rate_interval]
           )
         )
@@ -199,8 +201,9 @@ local tsLegend = tsOptions.legend;
       sum by (path, ingress, exported_namespace)(
         rate(
           nginx_ingress_controller_request_duration_seconds_count{
-            ingress =~ "$ingress",
-            exported_namespace=~"$exported_namespace"
+            job=~"$job",
+            exported_namespace=~"$exported_namespace",
+            ingress =~ "$ingress"
           }[$__rate_interval]
         )
       )
@@ -240,8 +243,9 @@ local tsLegend = tsOptions.legend;
         sum by (le, path, ingress, exported_namespace)(
           rate(
             nginx_ingress_controller_response_duration_seconds_bucket{
-              ingress =~ "$ingress",
-              exported_namespace=~"$exported_namespace"
+              job=~"$job",
+              exported_namespace=~"$exported_namespace",
+              ingress =~ "$ingress"
             }[$__rate_interval]
           )
         )
@@ -367,8 +371,9 @@ local tsLegend = tsOptions.legend;
       sum (
         rate(
           nginx_ingress_controller_request_duration_seconds_count{
-            ingress=~"$ingress",
+            job=~"$job",
             exported_namespace=~"$exported_namespace",
+            ingress=~"$ingress",
             status=~"[$error_codes].*"
           }[$__rate_interval]
         )

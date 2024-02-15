@@ -1,5 +1,4 @@
----
-name: CI
+name: ci
 on:
   push:
     branches:
@@ -8,7 +7,7 @@ on:
     branches:
       - main
 env:
-  golang-version: '1.17'
+  golang-version: "1.21"
 jobs:
   generate:
     runs-on: ubuntu-latest

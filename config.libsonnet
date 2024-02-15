@@ -15,7 +15,7 @@ local annotation = g.dashboard.annotation;
     grafanaUrl: 'https://grafana.com',
 
     overviewDashboardUid: 'ingress-nginx-overview-12mk4klgjweg',
-    requestHandlingPerformanceDashboardUid: 'ingress-nginx-request-jqkwfdqwd',
+    requestHandlingPerformanceDashboardUid: 'ingress-nginx-request-handling-performance-jqkwfdqwd',
 
     overviewDashboardUrl: '%s/d/%s/ingress-nginx-overview' % [self.grafanaUrl, self.overviewDashboardUid],
     requestHandlingPerformanceDashboardUrl: '%s/d/%s/fix tis' % [

@@ -5,10 +5,28 @@ rule_files:
 tests:
   - interval: 1m
     input_series:
+      - series: 'nginx_ingress_controller_config_last_reload_successful{job="ingress-nginx-controller-metrics", controller_class="class-successful"}'
+        values: "1x10"
+      - series: 'nginx_ingress_controller_config_last_reload_successful{job="ingress-nginx-controller-metrics", controller_class="class-failed"}'
+        values: "0x10"
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: NginxConfigReloadFailed
+        exp_alerts:
+          - exp_labels:
+              job: ingress-nginx-controller-metrics
+              controller_class: class-failed
+              severity: warning
+            exp_annotations:
+              summary: "Nginx config reload failed."
+              description: "Nginx config reload failed for the controller with the class class-failed."
+              dashboard_url: "https://grafana.com/d/ingress-nginx-overview-12mk/ingress-nginx-overview?var-job=ingress-nginx-controller-metrics&var-controller_class=class-failed"
+  - interval: 1m
+    input_series:
       - series: 'nginx_ingress_controller_requests{job="ingress-nginx-controller-metrics", exported_namespace="default", ingress="alert-test", status="200"}'
-        values: '1+10x10'
+        values: "1+10x10"
       - series: 'nginx_ingress_controller_requests{job="ingress-nginx-controller-metrics", exported_namespace="default", ingress="alert-test", status="403"}'
-        values: '1+5x10'
+        values: "1+5x10"
     alert_rule_test:
       - eval_time: 10m
         alertname: NginxHighHttp4xxErrorRate
@@ -18,15 +36,15 @@ tests:
               ingress: alert-test
               severity: info
             exp_annotations:
-              summary: 'Nginx high HTTP 4xx error rate.'
-              description: 'More than 5% HTTP requests with status 4xx for default/alert-test the past 5m.'
-              dashboard_url: 'https://grafana.com/d/ingress-nginx-overview-12mk/ingress-nginx-overview?var-exported_namespace=default&var-ingress=alert-test'
+              summary: "Nginx high HTTP 4xx error rate."
+              description: "More than 5% HTTP requests with status 4xx for default/alert-test the past 5m."
+              dashboard_url: "https://grafana.com/d/ingress-nginx-overview-12mk/ingress-nginx-overview?var-exported_namespace=default&var-ingress=alert-test"
   - interval: 1m
     input_series:
       - series: 'nginx_ingress_controller_requests{job="ingress-nginx-controller-metrics", exported_namespace="default", ingress="alert-test", status="200"}'
-        values: '1+10x10'
+        values: "1+10x10"
       - series: 'nginx_ingress_controller_requests{job="ingress-nginx-controller-metrics", exported_namespace="default", ingress="alert-test", status="503"}'
-        values: '1+5x10'
+        values: "1+5x10"
     alert_rule_test:
       - eval_time: 10m
         alertname: NginxHighHttp5xxErrorRate
@@ -36,6 +54,6 @@ tests:
               ingress: alert-test
               severity: warning
             exp_annotations:
-              summary: 'Nginx high HTTP 5xx error rate.'
-              description: 'More than 5% HTTP requests with status 5xx for default/alert-test the past 5m.'
-              dashboard_url: 'https://grafana.com/d/ingress-nginx-overview-12mk/ingress-nginx-overview?var-exported_namespace=default&var-ingress=alert-test'
+              summary: "Nginx high HTTP 5xx error rate."
+              description: "More than 5% HTTP requests with status 5xx for default/alert-test the past 5m."
+              dashboard_url: "https://grafana.com/d/ingress-nginx-overview-12mk/ingress-nginx-overview?var-exported_namespace=default&var-ingress=alert-test"

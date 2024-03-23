@@ -5,6 +5,24 @@
         name: 'nginx.rules',
         rules: [
           {
+            alert: 'NginxConfigReloadFailed',
+            expr: |||
+              sum(
+                nginx_ingress_controller_config_last_reload_successful{%(ingressNginxSelector)s}
+              ) by (job, controller_class)
+              == 0
+            ||| % $._config,
+            'for': '5m',
+            labels: {
+              severity: 'warning',
+            },
+            annotations: {
+              summary: 'Nginx config reload failed.',
+              description: 'Nginx config reload failed for the controller with the class {{ $labels.controller_class }}.',
+              dashboard_url: $._config.overviewDashboardUrl + '?var-job={{ $labels.job }}&var-controller_class={{ $labels.controller_class }}',
+            },
+          },
+          {
             alert: 'NginxHighHttp4xxErrorRate',
             expr: |||
               (sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, status=~"^4.*", ingress!~"%(ignoredIngresses)s"}[%(ingressNginx4xxInterval)s]))  by (exported_namespace, ingress) / sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, ingress!~"%(ignoredIngresses)s"}[%(ingressNginx4xxInterval)s]))  by (exported_namespace, ingress) * 100) > %(ingressNginx4xxThreshold)s

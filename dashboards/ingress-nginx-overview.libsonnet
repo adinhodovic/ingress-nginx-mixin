@@ -459,7 +459,7 @@ local tbOverride = tbStandardOptions.override;
         tbOptions.sortBy.withDisplayName('P50 Latency') +
         tbOptions.sortBy.withDesc(true)
       ) +
-      tbOptions.footer.TableFooterOptions.withEnablePagination(true) +
+      tbOptions.footer.withEnablePagination(true) +
       tbStandardOptions.withUnit('dtdurations') +
       tbQueryOptions.withTargets(
         [
@@ -570,7 +570,7 @@ local tbOverride = tbStandardOptions.override;
         tbOptions.sortBy.withDisplayName('TTL') +
         tbOptions.sortBy.withDesc(false)
       ) +
-      tbOptions.footer.TableFooterOptions.withEnablePagination(true) +
+      tbOptions.footer.withEnablePagination(true) +
       tbStandardOptions.withUnit('s') +
       tbQueryOptions.withTargets(
         [

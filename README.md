@@ -38,7 +38,7 @@ make prometheus_alerts.yaml
 make dashboards_out
 ```
 
-The prometheus_alerts.yaml and prometheus_rules.yaml files need to passed to your Prometheus server, and the files in dashboards_out need to be imported into you Grafana server. The exact details will depending on how you deploy your monitoring stack to Kubernetes.
+The prometheus_alerts.yaml file need to passed to your Prometheus server, and the files in dashboards_out need to be imported into you Grafana server. The exact details will depending on how you deploy your monitoring stack to Kubernetes.
 
 ## Alerts
 

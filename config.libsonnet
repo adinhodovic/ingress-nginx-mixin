@@ -12,6 +12,9 @@ local annotation = g.dashboard.annotation;
     // Selectors are inserted between {} in Prometheus queries.
     ingressNginxSelector: 'job=~"ingress-nginx-controller-metrics"',
 
+    // Default datasource name
+    datasourceName: 'default',
+
     // Opt-in to multiCluster dashboards by overriding this and the clusterLabel.
     showMultiCluster: false,
     clusterLabel: 'cluster',

@@ -9,7 +9,7 @@
     "expr": |
       sum(
         nginx_ingress_controller_config_last_reload_successful{job=~"ingress-nginx-controller-metrics"}
-      ) by (job, controller_class, cluster)
+      ) by (cluster, job, controller_class)
       == 0
     "for": "5m"
     "labels":

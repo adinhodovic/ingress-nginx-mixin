@@ -52,11 +52,10 @@ local tsLegend = tsOptions.legend;
         else query.generalOptions.showOnDashboard.withNothing()
       ),
 
-
     local jobVariable =
       query.new(
         'job',
-        'label_values(nginx_ingress_controller_config_hash{%(clusterLabel)s="$cluster",}, job)' % $._config,
+        'label_values(nginx_ingress_controller_config_hash{%(clusterLabel)s="$cluster"}, job)' % $._config,
       ) +
       query.withDatasourceFromVariable(datasourceVariable) +
       query.withSort(1) +

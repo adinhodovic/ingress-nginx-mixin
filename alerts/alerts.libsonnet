@@ -1,4 +1,5 @@
 {
+  local clusterVariabletoAdd = if $._config.enableMultiCluster then '&%(clusterLabel)s={{ $labels.%(clusterLabel)s}}' % $._config else '',
   prometheusAlerts+:: {
     groups+: [
       {
@@ -19,7 +20,7 @@
             annotations: {
               summary: 'Nginx config reload failed.',
               description: 'Nginx config reload failed for the controller with the class {{ $labels.controller_class }}.',
-              dashboard_url: $._config.overviewDashboardUrl + '?var-job={{ $labels.job }}&var-controller_class={{ $labels.controller_class }}',
+              dashboard_url: $._config.overviewDashboardUrl + '?var-job={{ $labels.job }}&var-controller_class={{ $labels.controller_class }}' + clusterVariabletoAdd,
             },
           },
           {
@@ -34,7 +35,7 @@
             annotations: {
               summary: 'Nginx high HTTP 4xx error rate.',
               description: 'More than %(ingressNginx4xxThreshold)s%% HTTP requests with status 4xx for {{ $labels.exported_namespace }}/{{ $labels.ingress }} the past %(ingressNginx4xxInterval)s.' % $._config,
-              dashboard_url: $._config.overviewDashboardUrl + '?var-exported_namespace={{ $labels.exported_namespace }}&var-ingress={{ $labels.ingress }}',
+              dashboard_url: $._config.overviewDashboardUrl + '?var-exported_namespace={{ $labels.exported_namespace }}&var-ingress={{ $labels.ingress }}' + clusterVariabletoAdd,
             },
           },
           {
@@ -46,7 +47,7 @@
             annotations: {
               summary: 'Nginx high HTTP 5xx error rate.',
               description: 'More than %(ingressNginx5xxThreshold)s%% HTTP requests with status 5xx for {{ $labels.exported_namespace }}/{{ $labels.ingress }} the past %(ingressNginx5xxInterval)s.' % $._config,
-              dashboard_url: $._config.overviewDashboardUrl + '?var-exported_namespace={{ $labels.exported_namespace }}&var-ingress={{ $labels.ingress }}',
+              dashboard_url: $._config.overviewDashboardUrl + '?var-exported_namespace={{ $labels.exported_namespace }}&var-ingress={{ $labels.ingress }}' + clusterVariabletoAdd,
             },
             labels: {
               severity: $._config.ingressNginx5xxSeverity,

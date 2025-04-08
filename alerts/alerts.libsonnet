@@ -9,7 +9,7 @@
             expr: |||
               sum(
                 nginx_ingress_controller_config_last_reload_successful{%(ingressNginxSelector)s}
-              ) by (job, controller_class)
+              ) by (job, controller_class, %(clusterLabel)s)
               == 0
             ||| % $._config,
             'for': '5m',
@@ -25,7 +25,7 @@
           {
             alert: 'NginxHighHttp4xxErrorRate',
             expr: |||
-              (sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, status=~"^4.*", ingress!~"%(ignoredIngresses)s"}[%(ingressNginx4xxInterval)s]))  by (exported_namespace, ingress) / sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, ingress!~"%(ignoredIngresses)s"}[%(ingressNginx4xxInterval)s]))  by (exported_namespace, ingress) * 100) > %(ingressNginx4xxThreshold)s
+              (sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, status=~"^4.*", ingress!~"%(ignoredIngresses)s"}[%(ingressNginx4xxInterval)s]))  by (exported_namespace, ingress, %(clusterLabel)s) / sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, ingress!~"%(ignoredIngresses)s"}[%(ingressNginx4xxInterval)s]))  by (exported_namespace, ingress, %(clusterLabel)s) * 100) > %(ingressNginx4xxThreshold)s
             ||| % $._config,
             'for': '1m',
             labels: {
@@ -40,7 +40,7 @@
           {
             alert: 'NginxHighHttp5xxErrorRate',
             expr: |||
-              (sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, status=~"^5.*", ingress!~"%(ignoredIngresses)s"}[%(ingressNginx5xxInterval)s]))  by (exported_namespace, ingress) / sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, ingress!~"%(ignoredIngresses)s"}[%(ingressNginx5xxInterval)s]))  by (exported_namespace, ingress) * 100) > %(ingressNginx5xxThreshold)s
+              (sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, status=~"^5.*", ingress!~"%(ignoredIngresses)s"}[%(ingressNginx5xxInterval)s]))  by (exported_namespace, ingress, %(clusterLabel)s) / sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, ingress!~"%(ignoredIngresses)s"}[%(ingressNginx5xxInterval)s]))  by (exported_namespace, ingress, %(clusterLabel)s) * 100) > %(ingressNginx5xxThreshold)s
             ||| % $._config,
             'for': '1m',
             annotations: {

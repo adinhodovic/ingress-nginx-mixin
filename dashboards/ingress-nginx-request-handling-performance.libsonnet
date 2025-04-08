@@ -27,12 +27,36 @@ local tsLegend = tsOptions.legend;
         'datasource',
         'prometheus',
       ) +
-      datasource.generalOptions.withLabel('Data source'),
+      datasource.generalOptions.withLabel('Data source') +
+      {
+        current: {
+          selected: true,
+          text: $._config.datasourceName,
+          value: $._config.datasourceName,
+        },
+      },
+
+    local clusterVariable =
+      query.new(
+        $._config.clusterLabel,
+        'label_values(nginx_ingress_controller_config_hash{}, cluster)' % $._config,
+      ) +
+      query.withDatasourceFromVariable(datasourceVariable) +
+      query.withSort() +
+      query.generalOptions.withLabel('Cluster') +
+      query.refresh.onLoad() +
+      query.refresh.onTime() +
+      (
+        if $._config.showMultiCluster
+        then query.generalOptions.showOnDashboard.withLabelAndValue()
+        else query.generalOptions.showOnDashboard.withNothing()
+      ),
+
 
     local jobVariable =
       query.new(
         'job',
-        'label_values(nginx_ingress_controller_config_hash{}, job)'
+        'label_values(nginx_ingress_controller_config_hash{%(clusterLabel)s="$cluster",}, job)' % $._config,
       ) +
       query.withDatasourceFromVariable(datasourceVariable) +
       query.withSort(1) +
@@ -45,7 +69,7 @@ local tsLegend = tsOptions.legend;
     local ingressExportedNamespaceVariable =
       query.new(
         'exported_namespace',
-        'label_values(nginx_ingress_controller_requests{job="$job"}, exported_namespace)'
+        'label_values(nginx_ingress_controller_requests{%(clusterLabel)s="$cluster", job="$job"}, exported_namespace)' % $._config
       ) +
       query.withDatasourceFromVariable(datasourceVariable) +
       query.withSort(1) +
@@ -58,7 +82,7 @@ local tsLegend = tsOptions.legend;
     local ingressVariable =
       query.new(
         'ingress',
-        'label_values(nginx_ingress_controller_requests{job="$job", exported_namespace=~"$exported_namespace"}, ingress)'
+        'label_values(nginx_ingress_controller_requests{%(clusterLabel)s="$cluster", job="$job", exported_namespace=~"$exported_namespace"}, ingress)' % $._config
       ) +
       query.withDatasourceFromVariable(datasourceVariable) +
       query.withSort(1) +
@@ -81,6 +105,7 @@ local tsLegend = tsOptions.legend;
 
     local variables = [
       datasourceVariable,
+      clusterVariable,
       jobVariable,
       ingressExportedNamespaceVariable,
       ingressVariable,
@@ -93,6 +118,7 @@ local tsLegend = tsOptions.legend;
         sum by (le, ingress, exported_namespace)(
           rate(
             nginx_ingress_controller_request_duration_seconds_bucket{
+              %(clusterLabel)s="$cluster",
               job=~"$job",
               exported_namespace=~"$exported_namespace",
               ingress =~ "$ingress"
@@ -148,6 +174,7 @@ local tsLegend = tsOptions.legend;
         sum by (le, ingress, exported_namespace)(
           rate(
             nginx_ingress_controller_response_duration_seconds_bucket{
+              %(clusterLabel)s="$cluster",
               job=~"$job",
               exported_namespace=~"$exported_namespace",
               ingress =~ "$ingress"
@@ -201,6 +228,7 @@ local tsLegend = tsOptions.legend;
       sum by (path, ingress, exported_namespace)(
         rate(
           nginx_ingress_controller_request_duration_seconds_count{
+            %(clusterLabel)s="$cluster",
             job=~"$job",
             exported_namespace=~"$exported_namespace",
             ingress =~ "$ingress"
@@ -243,6 +271,7 @@ local tsLegend = tsOptions.legend;
         sum by (le, path, ingress, exported_namespace)(
           rate(
             nginx_ingress_controller_response_duration_seconds_bucket{
+              %(clusterLabel)s="$cluster",
               job=~"$job",
               exported_namespace=~"$exported_namespace",
               ingress =~ "$ingress"
@@ -282,6 +311,7 @@ local tsLegend = tsOptions.legend;
       sum by (path, ingress, exported_namespace) (
         rate(
           nginx_ingress_controller_requests{
+            %(clusterLabel)s="$cluster",
             job=~"$job",
             exported_namespace=~"$exported_namespace",
             ingress=~"$ingress",
@@ -293,6 +323,7 @@ local tsLegend = tsOptions.legend;
       sum by (path, ingress, exported_namespace) (
         rate(
           nginx_ingress_controller_requests{
+            %(clusterLabel)s="$cluster",
             job=~"$job",
             exported_namespace =~ "$exported_namespace",
             ingress =~ "$ingress"
@@ -333,6 +364,7 @@ local tsLegend = tsOptions.legend;
       sum by (path, ingress, exported_namespace) (
         rate(
           nginx_ingress_controller_response_duration_seconds_sum{
+            %(clusterLabel)s="$cluster",
             job=~"$job",
             exported_namespace =~ "$exported_namespace",
             ingress =~ "$ingress"
@@ -371,6 +403,7 @@ local tsLegend = tsOptions.legend;
       sum (
         rate(
           nginx_ingress_controller_request_duration_seconds_count{
+            %(clusterLabel)s="$cluster",
             job=~"$job",
             exported_namespace=~"$exported_namespace",
             ingress=~"$ingress",
@@ -412,6 +445,7 @@ local tsLegend = tsOptions.legend;
       sum (
         rate (
           nginx_ingress_controller_response_size_sum {
+            %(clusterLabel)s="$cluster",
             job=~"$job",
             exported_namespace=~"$exported_namespace",
             ingress=~"$ingress"
@@ -422,9 +456,10 @@ local tsLegend = tsOptions.legend;
       sum (
         rate(
           nginx_ingress_controller_response_size_count {
+            %(clusterLabel)s="$cluster",
             job=~"$job",
             exported_namespace=~"$exported_namespace",
-            ingress=~"$ingress",
+            ingress=~"$ingress"
           }[$__rate_interval]
         )
       ) by (path, ingress, exported_namespace)

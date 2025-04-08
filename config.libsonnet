@@ -11,6 +11,9 @@ local annotation = g.dashboard.annotation;
 
     // Selectors are inserted between {} in Prometheus queries.
     ingressNginxSelector: 'job=~"ingress-nginx-controller-metrics"',
+    
+    enableMultiCluster: false,
+    clusterCondition: if self.enableMultiCluster then 'cluster="$cluster"' else '',
 
     grafanaUrl: 'https://grafana.com',
 

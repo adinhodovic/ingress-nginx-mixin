@@ -79,13 +79,26 @@ local tsLegend = tsOptions.legend;
       custom.selectionOptions.withMulti(true) +
       custom.selectionOptions.withIncludeAll(true, '4-5'),
 
+    local multiClusterVariable =
+      query.new(
+        'cluster',
+        'label_values(nginx_ingress_controller_config_hash{}, cluster)'
+      ) +
+      query.withDatasourceFromVariable(datasourceVariable) +
+      query.withSort(1) +
+      query.generalOptions.withLabel('Cluster') +
+      query.selectionOptions.withMulti(false) +
+      query.selectionOptions.withIncludeAll(false) +
+      query.refresh.onLoad() +
+      query.refresh.onTime(),
+
     local variables = [
       datasourceVariable,
       jobVariable,
       ingressExportedNamespaceVariable,
       ingressVariable,
       errorCodesVariable,
-    ],
+    ] + (if $._config.enableMultiCluster then [multiClusterVariable] else []),
 
     local ingressRequestHandlingTimeQuery = |||
       histogram_quantile(
@@ -95,7 +108,8 @@ local tsLegend = tsOptions.legend;
             nginx_ingress_controller_request_duration_seconds_bucket{
               job=~"$job",
               exported_namespace=~"$exported_namespace",
-              ingress =~ "$ingress"
+              ingress =~ "$ingress",
+              %(clusterCondition)s
             }[$__rate_interval]
           )
         )
@@ -150,7 +164,8 @@ local tsLegend = tsOptions.legend;
             nginx_ingress_controller_response_duration_seconds_bucket{
               job=~"$job",
               exported_namespace=~"$exported_namespace",
-              ingress =~ "$ingress"
+              ingress =~ "$ingress",
+              %(clusterCondition)s
             }[$__rate_interval]
           )
         )
@@ -203,7 +218,8 @@ local tsLegend = tsOptions.legend;
           nginx_ingress_controller_request_duration_seconds_count{
             job=~"$job",
             exported_namespace=~"$exported_namespace",
-            ingress =~ "$ingress"
+            ingress =~ "$ingress",
+            %(clusterCondition)s
           }[$__rate_interval]
         )
       )
@@ -245,7 +261,8 @@ local tsLegend = tsOptions.legend;
             nginx_ingress_controller_response_duration_seconds_bucket{
               job=~"$job",
               exported_namespace=~"$exported_namespace",
-              ingress =~ "$ingress"
+              ingress =~ "$ingress",
+              %(clusterCondition)s
             }[$__rate_interval]
           )
         )
@@ -285,7 +302,8 @@ local tsLegend = tsOptions.legend;
             job=~"$job",
             exported_namespace=~"$exported_namespace",
             ingress=~"$ingress",
-            status=~"[$error_codes].*"
+            status=~"[$error_codes].*",
+            %(clusterCondition)s
           }[$__rate_interval]
         )
       )
@@ -295,7 +313,8 @@ local tsLegend = tsOptions.legend;
           nginx_ingress_controller_requests{
             job=~"$job",
             exported_namespace =~ "$exported_namespace",
-            ingress =~ "$ingress"
+            ingress =~ "$ingress",
+            %(clusterCondition)s
           }[$__rate_interval]
         )
       )
@@ -335,7 +354,8 @@ local tsLegend = tsOptions.legend;
           nginx_ingress_controller_response_duration_seconds_sum{
             job=~"$job",
             exported_namespace =~ "$exported_namespace",
-            ingress =~ "$ingress"
+            ingress =~ "$ingress",
+            %(clusterCondition)s
           }[$__rate_interval]
         )
       )
@@ -374,7 +394,8 @@ local tsLegend = tsOptions.legend;
             job=~"$job",
             exported_namespace=~"$exported_namespace",
             ingress=~"$ingress",
-            status=~"[$error_codes].*"
+            status=~"[$error_codes].*",
+            %(clusterCondition)s
           }[$__rate_interval]
         )
       ) by(path, ingress, exported_namespace, status)
@@ -414,7 +435,8 @@ local tsLegend = tsOptions.legend;
           nginx_ingress_controller_response_size_sum {
             job=~"$job",
             exported_namespace=~"$exported_namespace",
-            ingress=~"$ingress"
+            ingress=~"$ingress",
+            %(clusterCondition)s
           }[$__rate_interval]
         )
       )  by (path, ingress, exported_namespace)
@@ -425,6 +447,7 @@ local tsLegend = tsOptions.legend;
             job=~"$job",
             exported_namespace=~"$exported_namespace",
             ingress=~"$ingress",
+            %(clusterCondition)s
           }[$__rate_interval]
         )
       ) by (path, ingress, exported_namespace)

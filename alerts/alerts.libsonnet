@@ -1,5 +1,5 @@
 {
-  local clusterVariabletoAdd = if $._config.enableMultiCluster then '&%(clusterLabel)s={{ $labels.%(clusterLabel)s}}' % $._config else '',
+  local clusterVariabletoAdd = if $._config.showMultiCluster then '&var-%(clusterLabel)s={{ $labels.%(clusterLabel)s}}' % $._config else '',
   prometheusAlerts+:: {
     groups+: [
       {
@@ -26,7 +26,27 @@
           {
             alert: 'NginxHighHttp4xxErrorRate',
             expr: |||
-              (sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, status=~"^4.*", ingress!~"%(ignoredIngresses)s"}[%(ingressNginx4xxInterval)s]))  by (exported_namespace, ingress, %(clusterLabel)s) / sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, ingress!~"%(ignoredIngresses)s"}[%(ingressNginx4xxInterval)s]))  by (exported_namespace, ingress, %(clusterLabel)s) * 100) > %(ingressNginx4xxThreshold)s
+              (
+                sum(
+                  rate(
+                    nginx_ingress_controller_requests{
+                      %(ingressNginxSelector)s,
+                      status=~"^4.*",
+                      ingress!~"%(ignoredIngresses)s"
+                    }[%(ingressNginx4xxInterval)s]
+                  )
+                ) by (exported_namespace, ingress, %(clusterLabel)s)
+                /
+                sum(
+                  rate(
+                    nginx_ingress_controller_requests{
+                      %(ingressNginxSelector)s,
+                      ingress!~"%(ignoredIngresses)s"
+                    }[%(ingressNginx4xxInterval)s]
+                  )
+                ) by (exported_namespace, ingress, %(clusterLabel)s)
+                * 100
+              ) > %(ingressNginx4xxThreshold)s
             ||| % $._config,
             'for': '1m',
             labels: {
@@ -41,7 +61,27 @@
           {
             alert: 'NginxHighHttp5xxErrorRate',
             expr: |||
-              (sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, status=~"^5.*", ingress!~"%(ignoredIngresses)s"}[%(ingressNginx5xxInterval)s]))  by (exported_namespace, ingress, %(clusterLabel)s) / sum(rate(nginx_ingress_controller_requests{%(ingressNginxSelector)s, ingress!~"%(ignoredIngresses)s"}[%(ingressNginx5xxInterval)s]))  by (exported_namespace, ingress, %(clusterLabel)s) * 100) > %(ingressNginx5xxThreshold)s
+              (
+                sum(
+                  rate(
+                    nginx_ingress_controller_requests{
+                      %(ingressNginxSelector)s,
+                      status=~"^5.*",
+                      ingress!~"%(ignoredIngresses)s"
+                    }[%(ingressNginx5xxInterval)s]
+                  )
+                ) by (exported_namespace, ingress, %(clusterLabel)s)
+                /
+                sum(
+                  rate(
+                    nginx_ingress_controller_requests{
+                      %(ingressNginxSelector)s,
+                      ingress!~"%(ignoredIngresses)s"
+                    }[%(ingressNginx5xxInterval)s]
+                  )
+                ) by (exported_namespace, ingress, %(clusterLabel)s)
+                * 100
+              ) > %(ingressNginx5xxThreshold)s
             ||| % $._config,
             'for': '1m',
             annotations: {

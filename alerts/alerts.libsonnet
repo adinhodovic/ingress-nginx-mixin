@@ -35,7 +35,7 @@
                       ingress!~"%(ignoredIngresses)s"
                     }[%(ingressNginx4xxInterval)s]
                   )
-                ) by (exported_namespace, ingress, %(clusterLabel)s)
+                ) by (%(clusterLabel)s, exported_namespace, ingress)
                 /
                 sum(
                   rate(
@@ -44,7 +44,7 @@
                       ingress!~"%(ignoredIngresses)s"
                     }[%(ingressNginx4xxInterval)s]
                   )
-                ) by (exported_namespace, ingress, %(clusterLabel)s)
+                ) by (%(clusterLabel)s, exported_namespace, ingress)
                 * 100
               ) > %(ingressNginx4xxThreshold)s
             ||| % $._config,
@@ -70,7 +70,7 @@
                       ingress!~"%(ignoredIngresses)s"
                     }[%(ingressNginx5xxInterval)s]
                   )
-                ) by (exported_namespace, ingress, %(clusterLabel)s)
+                ) by (%(clusterLabel)s, exported_namespace, ingress)
                 /
                 sum(
                   rate(
@@ -79,7 +79,7 @@
                       ingress!~"%(ignoredIngresses)s"
                     }[%(ingressNginx5xxInterval)s]
                   )
-                ) by (exported_namespace, ingress, %(clusterLabel)s)
+                ) by (%(clusterLabel)s, exported_namespace, ingress)
                 * 100
               ) > %(ingressNginx5xxThreshold)s
             ||| % $._config,

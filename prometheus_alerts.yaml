@@ -29,7 +29,7 @@
               ingress!~""
             }[5m]
           )
-        ) by (exported_namespace, ingress, cluster)
+        ) by (cluster, exported_namespace, ingress)
         /
         sum(
           rate(
@@ -38,7 +38,7 @@
               ingress!~""
             }[5m]
           )
-        ) by (exported_namespace, ingress, cluster)
+        ) by (cluster, exported_namespace, ingress)
         * 100
       ) > 5
     "for": "1m"
@@ -59,7 +59,7 @@
               ingress!~""
             }[5m]
           )
-        ) by (exported_namespace, ingress, cluster)
+        ) by (cluster, exported_namespace, ingress)
         /
         sum(
           rate(
@@ -68,7 +68,7 @@
               ingress!~""
             }[5m]
           )
-        ) by (exported_namespace, ingress, cluster)
+        ) by (cluster, exported_namespace, ingress)
         * 100
       ) > 5
     "for": "1m"

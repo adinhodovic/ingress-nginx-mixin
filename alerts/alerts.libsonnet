@@ -1,5 +1,5 @@
 {
-  local clusterVariabletoAdd = if $._config.showMultiCluster then '&var-%(clusterLabel)s={{ $labels.%(clusterLabel)s}}' % $._config else '',
+  local clusterVariableQueryString = if $._config.showMultiCluster then '&var-%(clusterLabel)s={{ $labels.%(clusterLabel)s}}' % $._config else '',
   prometheusAlerts+:: {
     groups+: [
       {
@@ -10,7 +10,7 @@
             expr: |||
               sum(
                 nginx_ingress_controller_config_last_reload_successful{%(ingressNginxSelector)s}
-              ) by (job, controller_class, %(clusterLabel)s)
+              ) by (%(clusterLabel)s, job, controller_class)
               == 0
             ||| % $._config,
             'for': '5m',
@@ -20,7 +20,7 @@
             annotations: {
               summary: 'Nginx config reload failed.',
               description: 'Nginx config reload failed for the controller with the class {{ $labels.controller_class }}.',
-              dashboard_url: $._config.overviewDashboardUrl + '?var-job={{ $labels.job }}&var-controller_class={{ $labels.controller_class }}' + clusterVariabletoAdd,
+              dashboard_url: $._config.overviewDashboardUrl + '?var-job={{ $labels.job }}&var-controller_class={{ $labels.controller_class }}' + clusterVariableQueryString,
             },
           },
           {
@@ -55,7 +55,7 @@
             annotations: {
               summary: 'Nginx high HTTP 4xx error rate.',
               description: 'More than %(ingressNginx4xxThreshold)s%% HTTP requests with status 4xx for {{ $labels.exported_namespace }}/{{ $labels.ingress }} the past %(ingressNginx4xxInterval)s.' % $._config,
-              dashboard_url: $._config.overviewDashboardUrl + '?var-exported_namespace={{ $labels.exported_namespace }}&var-ingress={{ $labels.ingress }}' + clusterVariabletoAdd,
+              dashboard_url: $._config.overviewDashboardUrl + '?var-exported_namespace={{ $labels.exported_namespace }}&var-ingress={{ $labels.ingress }}' + clusterVariableQueryString,
             },
           },
           {
@@ -87,7 +87,7 @@
             annotations: {
               summary: 'Nginx high HTTP 5xx error rate.',
               description: 'More than %(ingressNginx5xxThreshold)s%% HTTP requests with status 5xx for {{ $labels.exported_namespace }}/{{ $labels.ingress }} the past %(ingressNginx5xxInterval)s.' % $._config,
-              dashboard_url: $._config.overviewDashboardUrl + '?var-exported_namespace={{ $labels.exported_namespace }}&var-ingress={{ $labels.ingress }}' + clusterVariabletoAdd,
+              dashboard_url: $._config.overviewDashboardUrl + '?var-exported_namespace={{ $labels.exported_namespace }}&var-ingress={{ $labels.ingress }}' + clusterVariableQueryString,
             },
             labels: {
               severity: $._config.ingressNginx5xxSeverity,

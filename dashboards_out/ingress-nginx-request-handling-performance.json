@@ -536,7 +536,7 @@
             "label": "Job",
             "multi": false,
             "name": "job",
-            "query": "label_values(nginx_ingress_controller_config_hash{cluster=\"$cluster\",}, job)",
+            "query": "label_values(nginx_ingress_controller_config_hash{cluster=\"$cluster\"}, job)",
             "refresh": 2,
             "sort": 1,
             "type": "query"

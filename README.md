@@ -1,3 +1,9 @@
+# NOTE
+
+Ingress-nginx is [retired](https://kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/). I've moved to [envoy-gateway](https://github.com/envoyproxy/gateway) and Gateway-api. This mixin will no longer be maintained.
+
+I've created a mixin for [Envoy and Envoy Gateway](https://github.com/adinhodovic/envoy-mixin).
+
 # Prometheus Monitoring Mixin for Ingress-nginx
 
 A set of Grafana dashboards and Prometheus alerts and rules for ingress-nginx.
